@@ -89,7 +89,7 @@ const ListToolbar: React.FC<ListToolbarProps> = ({
               position="popper"
               side="bottom"
               align="start"
-              className="bg-white border border-slate-200 rounded-lg shadow-lg p-1 z-50 min-w-[180px]"
+              className="bg-white border border-slate-200 rounded-lg shadow-lg p-1 z-50 min-w-45"
               style={{
                 boxShadow:
                   "var(--dropdown-shadow, 0 4px 24px rgba(0,0,0,0.08))",
