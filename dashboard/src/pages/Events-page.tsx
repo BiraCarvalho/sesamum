@@ -4,6 +4,7 @@ import ListToolbar from "../components/shared/ListToolbar";
 import ListCard from "../components/shared/ListCard";
 import { type Event } from "../types/index";
 import { Modal } from "../components/shared/Modal";
+import { Toast } from "../components/shared/Toast";
 import { Calendar, Building2, Users } from "lucide-react";
 
 // Mockup events based on the data schema
@@ -55,6 +56,12 @@ const EventsPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  // Toast states
+  const [successOpen, setSuccessOpen] = useState(false);
+
+  React.useEffect(() => {
+    setSuccessOpen(true);
+  }, []);
 
   const filteredEvents = MOCK_EVENTS.filter((event) => {
     const matchesSearch = event.name
@@ -66,6 +73,14 @@ const EventsPage: React.FC = () => {
 
   return (
     <PageContainer>
+      {/* Toasts on page entry */}
+      <Toast
+        open={successOpen}
+        onOpenChange={setSuccessOpen}
+        type="success"
+        message="Bem-vindo ao painel! (Sucesso)"
+        duration={2500}
+      />
       <PageHeader title="Eventos" subtitle="Gerencie eventos do sistema." />
 
       <ListToolbar

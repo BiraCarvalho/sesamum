@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 :root {
+  /* Toast (Radix UI) */
+  --toast-success-bg: #e6f9ed;
+  --toast-success-text: #15803d;
+  --toast-success-border: #22c55e;
+  --toast-error-bg: #fef2f2;
+  --toast-error-text: #b91c1c;
+  --toast-error-border: #ef4444;
+  --toast-warning-bg: #fef9c3;
+  --toast-warning-text: #b45309;
+  --toast-warning-border: #facc15;
   /* Page Header */
   --header-bg: transparent;
   --header-padding: 0;
