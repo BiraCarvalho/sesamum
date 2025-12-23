@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+:root {
+  --color-primary: #2563eb;
+  --color-secondary: #64748b;
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-warning: #ea580c;
+  --color-main-bg: #f1f5f9;
+  --sidebar-bg: #0f172a;
+  --sidebar-border: #1e293b;
+  --sidebar-active-bg: var(--color-primary);
+  --sidebar-hover-bg: #1e293b;
+  --sidebar-text: #f1f5f9;
+  --sidebar-muted: #64748b;
+  --sidebar-shadow: 0 4px 24px 0 rgba(37, 99, 235, 0.15);
+}
