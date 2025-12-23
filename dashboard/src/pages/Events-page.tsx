@@ -3,6 +3,7 @@ import { PageHeader, PageContainer } from "../components/shared/PageLayout";
 import ListToolbar from "../components/shared/ListToolbar";
 import ListCard from "../components/shared/ListCard";
 import { type Event } from "../types/index";
+import { Modal } from "../components/shared/Modal";
 import { Calendar, Building2, Users } from "lucide-react";
 
 // Mockup events based on the data schema
@@ -53,6 +54,7 @@ const formatDate = (date: string) => {
 const EventsPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [modalOpen, setModalOpen] = useState(false);
 
   const filteredEvents = MOCK_EVENTS.filter((event) => {
     const matchesSearch = event.name
@@ -74,12 +76,19 @@ const EventsPage: React.FC = () => {
           { value: "close", label: "Concluídos" },
         ]}
         addLabel="Novo Evento"
-        onAdd={() => {}}
+        onAdd={() => setModalOpen(true)}
         searchValue={search}
         onSearchChange={setSearch}
         filterValue={filter}
         onFilterChange={setFilter}
       />
+
+      <Modal open={modalOpen} onOpenChange={setModalOpen} title="Novo Evento">
+        {/* Future form goes here */}
+        <div className="text-sm text-gray-600">
+          Formulário de novo evento em breve.
+        </div>
+      </Modal>
 
       {/* Events List */}
       <ListCard
