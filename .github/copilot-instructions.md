@@ -652,7 +652,7 @@ npm run lint                 # Check ESLint
 
 **File Naming:**
 
-- React Components: `ComponentName-page.tsx` (e.g., `Dashboard-page.tsx`, `CheckIn-page.tsx`)
+- React Components: `ComponentName.tsx` (e.g., `Dashboard.tsx`, `CheckIn.tsx`)
 - Services/Utilities: `kebab-case.ts` (e.g., `auth-service.ts`, `api-client.ts`)
 - Hooks: `use-feature-name.ts` (e.g., `use-auth.ts`, `use-api.ts`)
 - Types: `types/index.ts` or feature-specific `types/feature.ts`
