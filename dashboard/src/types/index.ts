@@ -1,3 +1,12 @@
+// User type based on copilot-instructions
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: "admin" | "company" | "control";
+  company_id: number;
+}
+
 // Company type based on copilot-instructions
 export interface Company {
   id: number;
