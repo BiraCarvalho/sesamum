@@ -128,7 +128,7 @@ const UsersPage: React.FC = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-title font-semibold">{user.name}</h3>
-                    <Badge variant="open" />
+                    <Badge variant={user.role} />
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
                     <span className="flex items-center gap-1">
