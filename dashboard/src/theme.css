@@ -3,7 +3,7 @@
 @theme {
   --color-primary: #2563eb; /* azul claro padrão */
   --color-secondary: #64748b; /* azul escuro padrão */
-  --color-base: #f1f5f9; /* cinza claro para fundos */
+  --color-maind-bg: #f1f5f9; /* cinza claro para fundos */
 
   /* Cores dos títulos e subtítulos */
   --color-title: #0f172a; /* cor do título */

@@ -13,7 +13,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-slate-50 flex font-sans">
+      <div className="min-h-screen flex font-sans">
         {/* Sidebar Navigation */}
         <Sidebar
           isOpen={isSidebarOpen}
@@ -23,34 +23,26 @@ const App: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile Header */}
-          <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-10">
+          <header className="md:hidden bg-card-primary border-b border-card-border p-4 flex items-center justify-between sticky top-0 z-10">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="text-slate-600"
+                className="text-sidebar-bg"
               >
                 <Menu size={24} />
               </button>
-              <h1 className="font-bold text-lg text-slate-800">Sesamum</h1>
+              {/* Logo or Title */}
+              <h1 className="font-bold text-lg text-sidebar-bg">Sesamum</h1>
             </div>
+            {/* User Avatar Placeholder */}
             <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
               AD
             </div>
           </header>
 
           {/* Scrollable Content */}
-          <div
-            className="h-screen"
-            style={{
-              background: "var(--sidebar-bg)",
-            }}
-          >
-            <main
-              className="flex-1 p-4 md:p-8 md:m-4 md:rounded-3xl h-[calc(100vh-64.8px)] md:h-[calc(100vh-32px)] overflow-y-auto"
-              style={{
-                background: "var(--color-main-bg)",
-              }}
-            >
+          <div className="h-screen bg-sidebar-bg">
+            <main className="bg-maind-bg flex-1 p-4 md:p-8 md:m-4 md:rounded-3xl h-[calc(100vh-64.8px)] md:h-[calc(100vh-32px)] overflow-y-auto">
               <div className="max-w-7xl mx-auto">
                 <Routes>
                   <Route path="/" element={<DashboardPage />} />

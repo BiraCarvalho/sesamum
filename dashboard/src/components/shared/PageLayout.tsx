@@ -11,32 +11,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   subtitle,
   action,
 }) => (
-  <div
-    className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
-    style={{
-      padding: "var(--header-padding, 0)",
-      borderRadius: "var(--header-radius, 0)",
-      background: "var(--header-bg, transparent)",
-    }}
-  >
+  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
     <div>
-      <h1
-        className="font-bold"
-        style={{
-          fontSize: "var(--header-title-size, 2rem)",
-          color: "var(--header-title-color, #0f172a)",
-        }}
-      >
-        {title}
-      </h1>
-      {subtitle && (
-        <p
-          className="mt-1"
-          style={{ color: "var(--header-subtitle-color, #64748b)" }}
-        >
-          {subtitle}
-        </p>
-      )}
+      <h1 className="font-bold text-3xl text-text-title">{title}</h1>
+      {subtitle && <p className="mt-1 text-subtitle ">{subtitle}</p>}
     </div>
     {action && <div className="flex gap-3">{action}</div>}
   </div>
@@ -47,14 +25,7 @@ interface PageContainerProps {
 }
 
 export const PageContainer: React.FC<PageContainerProps> = ({ children }) => (
-  <div
-    className="max-w-7xl mx-auto w-full"
-    style={{
-      padding: "var(--container-padding, 2rem 1rem)",
-      borderRadius: "var(--container-radius, 1.5rem)",
-      background: "var(--container-bg, transparent)",
-    }}
-  >
+  <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
     {children}
   </div>
 );
