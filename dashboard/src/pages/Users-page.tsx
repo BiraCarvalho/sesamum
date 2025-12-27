@@ -74,7 +74,7 @@ const UsersPage: React.FC = () => {
           { value: "all", label: "Todos" },
           { value: "admin", label: "Administradores" },
           { value: "company", label: "Empresas" },
-          { value: "control", label: "Controle" },
+          { value: "control", label: "Controladores" },
         ]}
         addLabel="Novo Usuário"
         onAdd={() => setModalOpen(true)}
