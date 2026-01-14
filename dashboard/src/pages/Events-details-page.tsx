@@ -5,13 +5,9 @@ import {
   TabsContainer,
   InformationsDetail,
 } from "../components/layout/DetailsPageLayout";
-import { MetricCard } from "../components/shared/MetricCard";
-import Card from "../components/ui/Card";
-import * as Progress from "@radix-ui/react-progress";
-import ListToolbar from "../components/shared/ListToolbar";
-import ListCard from "../components/shared/ListCard";
-import Badge from "../components/ui/Badge";
-import { User as UserIcon, Building2 } from "lucide-react";
+import OverviewTab from "../components/event-details/OverviewTab";
+import StaffTab from "../components/event-details/StaffTab";
+import CompaniesTab from "../components/event-details/CompaniesTab";
 //import { type  } from "../types/index";
 
 const EventDetailsPage: React.FC = () => {
@@ -108,262 +104,6 @@ const EventDetailsPage: React.FC = () => {
     { name: "Global Services", role: "service", staffCount: 2 },
   ];
 
-  // Example: Overview tab content
-  const OverviewTab = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MetricCard
-          title="Empresas no Evento"
-          value={5}
-          icon="🏢"
-          color="company"
-        />
-        <MetricCard
-          title="Equipe no Evento"
-          value={42}
-          icon="👥"
-          color="user"
-        />
-      </div>
-
-      <Card>
-        <h2 className="text-xl font-semibold text-text-title mb-6">
-          Status de Check-in/Check-out
-        </h2>
-        <div className="space-y-6">
-          {/* Check-in Progress */}
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-sm font-medium text-text-subtitle">
-                Check-in Realizado
-              </label>
-              <span className="text-sm font-semibold text-text-title">
-                35 / 42 (83%)
-              </span>
-            </div>
-            <Progress.Root
-              className="relative overflow-hidden bg-slate-200 rounded-full w-full h-3"
-              value={83}
-            >
-              <Progress.Indicator
-                className="bg-green-500 h-full transition-transform duration-300 ease-in-out"
-                style={{ transform: `translateX(-${100 - 83}%)` }}
-              />
-            </Progress.Root>
-          </div>
-
-          {/* Check-out Progress */}
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-sm font-medium text-text-subtitle">
-                Check-out Realizado
-              </label>
-              <span className="text-sm font-semibold text-text-title">
-                28 / 35 (80%)
-              </span>
-            </div>
-            <Progress.Root
-              className="relative overflow-hidden bg-slate-200 rounded-full w-full h-3"
-              value={80}
-            >
-              <Progress.Indicator
-                className="bg-blue-500 h-full transition-transform duration-300 ease-in-out"
-                style={{ transform: `translateX(-${100 - 80}%)` }}
-              />
-            </Progress.Root>
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <h2 className="text-xl font-semibold text-text-title mb-6">
-          Equipe por Empresa
-        </h2>
-        <div className="space-y-4">
-          {companiesStaff.map((company, index) => {
-            const percentage = (company.staffCount / totalStaff) * 100;
-            return (
-              <div key={index}>
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <p className="text-sm font-medium text-text-title">
-                      {company.name}
-                    </p>
-                    <p className="text-xs text-text-subtitle">
-                      Role: {company.role}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-text-title">
-                    {company.staffCount} staffs
-                  </span>
-                </div>
-                <Progress.Root
-                  className="relative overflow-hidden bg-slate-200 rounded-full w-full h-2"
-                  value={percentage}
-                >
-                  <Progress.Indicator
-                    className="bg-primary h-full transition-transform duration-300 ease-in-out"
-                    style={{ transform: `translateX(-${100 - percentage}%)` }}
-                  />
-                </Progress.Root>
-              </div>
-            );
-          })}
-        </div>
-      </Card>
-    </div>
-  );
-
-  // Example: Staff tab content
-  const StaffTab = () => {
-    // Map UI filter to company
-    const filterMap: Record<string, number[]> = {
-      all: [1, 2, 3, 4, 5],
-      company1: [1],
-      company2: [2],
-      company3: [3],
-    };
-
-    const filteredStaff = MOCK_STAFF.filter((staff) => {
-      const matchesSearch =
-        staff.name.toLowerCase().includes(staffSearch.toLowerCase()) ||
-        staff.cpf.includes(staffSearch);
-      const matchesFilter =
-        staffFilter === "all" ||
-        filterMap[staffFilter]?.includes(staff.company_id);
-      return matchesSearch && matchesFilter;
-    });
-
-    return (
-      <div className="space-y-4">
-        <ListToolbar
-          searchPlaceholder="Buscar por Nome ou CPF..."
-          filterOptions={[
-            { value: "all", label: "Todas Empresas" },
-            { value: "company1", label: "Acme Productions" },
-            { value: "company2", label: "Tech Solutions" },
-            { value: "company3", label: "Event Masters" },
-          ]}
-          addLabel="Adicionar Equipe"
-          onAdd={() => console.log("Add staff")}
-          searchValue={staffSearch}
-          onSearchChange={setStaffSearch}
-          filterValue={staffFilter}
-          onFilterChange={setStaffFilter}
-        />
-
-        <ListCard
-          filteredElements={filteredStaff}
-          notFoundIcon={
-            <UserIcon size={48} className="mx-auto text-slate-300 mb-4" />
-          }
-          notFoundMessage="Nenhum membro da equipe encontrado"
-        >
-          {(staff) => (
-            <>
-              <ListCard.Icon>
-                <UserIcon size={28} />
-              </ListCard.Icon>
-
-              <ListCard.Body>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-title font-semibold">{staff.name}</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
-                    <span className="flex items-center gap-1">
-                      <UserIcon size={14} />
-                      {staff.cpf}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Building2 size={14} />
-                      Empresa #{staff.company_id}
-                    </span>
-                  </div>
-                </div>
-              </ListCard.Body>
-            </>
-          )}
-        </ListCard>
-      </div>
-    );
-  };
-
-  // Example: Empresas tab content
-  const EmpresasTab = () => {
-    // Map UI filter to company role
-    const filterMap: Record<string, string[]> = {
-      all: ["production", "service"],
-      production: ["production"],
-      service: ["service"],
-    };
-
-    const filteredCompanies = MOCK_COMPANIES.filter((company) => {
-      const matchesSearch =
-        company.name.toLowerCase().includes(companySearch.toLowerCase()) ||
-        company.cnpj.includes(companySearch);
-      const matchesFilter =
-        companyFilter === "all" ||
-        filterMap[companyFilter]?.includes(company.role);
-      return matchesSearch && matchesFilter;
-    });
-
-    return (
-      <div className="space-y-4">
-        <ListToolbar
-          searchPlaceholder="Buscar por Nome ou CNPJ..."
-          filterOptions={[
-            { value: "all", label: "Todas" },
-            { value: "production", label: "Produção" },
-            { value: "service", label: "Serviço" },
-          ]}
-          addLabel="Adicionar Empresa"
-          onAdd={() => console.log("Add company")}
-          searchValue={companySearch}
-          onSearchChange={setCompanySearch}
-          filterValue={companyFilter}
-          onFilterChange={setCompanyFilter}
-        />
-
-        <ListCard
-          filteredElements={filteredCompanies}
-          notFoundIcon={
-            <Building2 size={48} className="mx-auto text-slate-300 mb-4" />
-          }
-          notFoundMessage="Nenhuma empresa encontrada"
-        >
-          {(company) => (
-            <>
-              <ListCard.Icon>
-                <Building2 size={28} />
-              </ListCard.Icon>
-
-              <ListCard.Body>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-title font-semibold">{company.name}</h3>
-                    <Badge />
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
-                    <span className="flex items-center gap-1">
-                      <Building2 size={14} />
-                      {company.cnpj}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <UserIcon size={14} />
-                      {company.staffCount} staffs
-                    </span>
-                    <span className="text-xs">Role: {company.role}</span>
-                  </div>
-                </div>
-              </ListCard.Body>
-            </>
-          )}
-        </ListCard>
-      </div>
-    );
-  };
-
   return (
     <DetailsPageContainer>
       <PageHeader
@@ -409,9 +149,40 @@ const EventDetailsPage: React.FC = () => {
 
       <TabsContainer
         tabs={[
-          { title: "Visão Geral", content: <OverviewTab /> },
-          { title: "Equipe", content: <StaffTab /> },
-          { title: "Empresas", content: <EmpresasTab /> },
+          {
+            title: "Visão Geral",
+            content: (
+              <OverviewTab
+                totalStaff={totalStaff}
+                companiesStaff={companiesStaff}
+              />
+            ),
+          },
+          {
+            title: "Equipe",
+            content: (
+              <StaffTab
+                staffSearch={staffSearch}
+                setStaffSearch={setStaffSearch}
+                staffFilter={staffFilter}
+                setStaffFilter={setStaffFilter}
+                mockStaff={MOCK_STAFF}
+                companies={MOCK_COMPANIES}
+              />
+            ),
+          },
+          {
+            title: "Empresas",
+            content: (
+              <CompaniesTab
+                companySearch={companySearch}
+                setCompanySearch={setCompanySearch}
+                companyFilter={companyFilter}
+                setCompanyFilter={setCompanyFilter}
+                companies={MOCK_COMPANIES}
+              />
+            ),
+          },
         ]}
         defaultTab="Visão Geral"
       />
