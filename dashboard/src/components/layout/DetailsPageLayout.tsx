@@ -20,7 +20,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     {onEdit && (
       <button
         onClick={onEdit}
-        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
+        className="px-4 py-2 bg-button-bg text-white rounded-lg hover:bg-button-bg-hover hover:cursor-pointer transition-colors font-medium"
       >
         Editar
       </button>
