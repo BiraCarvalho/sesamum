@@ -2,6 +2,7 @@ import React from "react";
 import { MetricCard } from "../shared/MetricCard";
 import Card from "../ui/Card";
 import * as Progress from "@radix-ui/react-progress";
+import { Building2, Users } from "lucide-react";
 
 interface OverviewTabProps {
   totalStaff: number;
@@ -21,10 +22,15 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       <MetricCard
         title="Empresas no Evento"
         value={5}
-        icon="🏢"
+        icon={<Building2 />}
         color="company"
       />
-      <MetricCard title="Equipe no Evento" value={42} icon="👥" color="user" />
+      <MetricCard
+        title="Equipe no Evento"
+        value={42}
+        icon={<Users />}
+        color="user"
+      />
     </div>
 
     <Card>
