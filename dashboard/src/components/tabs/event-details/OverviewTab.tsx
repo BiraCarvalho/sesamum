@@ -1,6 +1,6 @@
 import React from "react";
-import { MetricCard } from "../shared/MetricCard";
-import Card from "../ui/Card";
+import { MetricCard } from "../../shared/MetricCard";
+import Card from "../../ui/Card";
 import * as Progress from "@radix-ui/react-progress";
 import { Building2, Users } from "lucide-react";
 

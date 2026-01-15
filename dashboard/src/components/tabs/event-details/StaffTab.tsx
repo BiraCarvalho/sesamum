@@ -1,6 +1,6 @@
 import React from "react";
-import ListToolbar from "../shared/ListToolbar";
-import ListCard from "../shared/ListCard";
+import ListToolbar from "../../shared/ListToolbar";
+import ListCard from "../../shared/ListCard";
 import { User as UserIcon, Building2 } from "lucide-react";
 
 interface Staff {

@@ -71,7 +71,7 @@ export const TabsContainer: React.FC<TabsContainerProps> = ({
           <Tabs.Trigger
             key={tab.title}
             value={tab.title}
-            className="px-6 py-3 text-sm font-medium text-text-subtitle border-b-2 border-transparent hover:text-text-title hover:border-border transition-colors data-[state=active]:text-primary data-[state=active]:border-primary"
+            className="px-6 py-3 text-sm font-medium text-text-subtitle border-b-2 border-transparent hover:text-text-title hover:border-border hover:cursor-pointer transition-colors data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:cursor-default"
           >
             {tab.title}
           </Tabs.Trigger>

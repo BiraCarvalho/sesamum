@@ -5,9 +5,9 @@ import {
   TabsContainer,
   InformationsDetail,
 } from "../components/layout/DetailsPageLayout";
-import OverviewTab from "../components/event-details/OverviewTab";
-import StaffTab from "../components/event-details/StaffTab";
-import CompaniesTab from "../components/event-details/CompaniesTab";
+import OverviewTab from "../components/tabs/event-details/OverviewTab";
+import StaffTab from "../components/tabs/event-details/StaffTab";
+import CompaniesTab from "../components/tabs/CompaniesTab";
 //import { type  } from "../types/index";
 
 const EventDetailsPage: React.FC = () => {
