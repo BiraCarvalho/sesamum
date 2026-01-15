@@ -7,6 +7,7 @@ import { Modal } from "../components/ui/Modal";
 import { Toast } from "../components/ui/Toast";
 import { Calendar, Building2, Users, MapPin } from "lucide-react";
 import Badge from "../components/ui/Badge";
+import { useNavigate } from "react-router-dom";
 
 // Mockup events based on the data schema
 const MOCK_EVENTS: Event[] = [
@@ -52,6 +53,7 @@ const MOCK_EVENTS: Event[] = [
 ];
 
 const EventsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -69,6 +71,10 @@ const EventsPage: React.FC = () => {
     const matchesFilter = filter === "all" || event.status === filter;
     return matchesSearch && matchesFilter;
   });
+
+  const handleEventClick = (event: Event) => {
+    navigate(`/events/${event.id}`);
+  };
 
   return (
     <PageContainer>
@@ -111,6 +117,7 @@ const EventsPage: React.FC = () => {
           <Calendar size={48} className="mx-auto text-slate-300 mb-4" />
         }
         notFoundMessage="Nenhum evento encontrado"
+        onClick={handleEventClick}
       >
         {(event) => {
           const isActive = event.status === "open";

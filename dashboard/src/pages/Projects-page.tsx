@@ -7,6 +7,7 @@ import { Modal } from "../components/ui/Modal";
 import { Building2, Briefcase, Calendar } from "lucide-react";
 import { formatDate } from "../lib/dateUtils";
 import Badge from "../components/ui/Badge";
+import { useNavigate } from "react-router-dom";
 
 // Mockup projects based on the data schema
 const MOCK_PROJECTS: Project[] = [
@@ -49,6 +50,7 @@ const MOCK_PROJECTS: Project[] = [
 ];
 
 const ProjectsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -67,6 +69,10 @@ const ProjectsPage: React.FC = () => {
     const matchesFilter = filterMap[filter].includes(project.status);
     return matchesSearch && matchesFilter;
   });
+
+  const handleProjectClick = (project: Project) => {
+    navigate(`/projects/${project.id}`);
+  };
 
   return (
     <PageContainer>
@@ -104,6 +110,7 @@ const ProjectsPage: React.FC = () => {
             <Briefcase size={48} className="mx-auto text-slate-300 mb-4" />
           }
           notFoundMessage="Nenhum projeto encontrado"
+          onClick={handleProjectClick}
         >
           {(project) => {
             const isActive = project.status === "open";

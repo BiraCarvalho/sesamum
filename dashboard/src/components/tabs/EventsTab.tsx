@@ -3,6 +3,7 @@ import ListToolbar from "../shared/ListToolbar";
 import ListCard from "../shared/ListCard";
 import Badge from "../ui/Badge";
 import { Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Event {
   id: number;
@@ -27,6 +28,8 @@ const EventsTab: React.FC<EventsTabProps> = ({
   setEventFilter,
   events,
 }) => {
+  const navigate = useNavigate();
+
   // Map UI filter to event status
   const filterMap: Record<string, string[]> = {
     all: ["open", "close"],
@@ -42,6 +45,10 @@ const EventsTab: React.FC<EventsTabProps> = ({
       eventFilter === "all" || filterMap[eventFilter]?.includes(event.status);
     return matchesSearch && matchesFilter;
   });
+
+  const handleEventClick = (event: Event) => {
+    navigate(`/events/${event.id}`);
+  };
 
   return (
     <div className="space-y-4">
@@ -66,6 +73,7 @@ const EventsTab: React.FC<EventsTabProps> = ({
           <Calendar size={48} className="mx-auto text-slate-300 mb-4" />
         }
         notFoundMessage="Nenhum evento encontrado"
+        onClick={handleEventClick}
       >
         {(event) => (
           <>

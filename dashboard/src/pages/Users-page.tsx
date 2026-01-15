@@ -6,6 +6,7 @@ import Badge from "../components/ui/Badge";
 import { type User } from "../types/index";
 import { Modal } from "../components/ui/Modal";
 import { Building2, User as UserIcon, Shield, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Mockup users based on the data schema
 const MOCK_USERS: User[] = [
@@ -44,6 +45,7 @@ const MOCK_USERS: User[] = [
 ];
 
 const UsersPage: React.FC = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,6 +65,10 @@ const UsersPage: React.FC = () => {
     const matchesFilter = filterMap[filter].includes(user.role);
     return matchesSearch && matchesFilter;
   });
+
+  const handleUserClick = (user: User) => {
+    navigate(`/users/${user.id}`);
+  };
 
   return (
     <PageContainer>
@@ -98,6 +104,7 @@ const UsersPage: React.FC = () => {
           <UserIcon size={48} className="mx-auto text-slate-300 mb-4" />
         }
         notFoundMessage="Nenhum usuário encontrado"
+        onClick={handleUserClick}
       >
         {(user) => {
           const getRoleIcon = (user: any) => {

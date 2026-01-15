@@ -2,6 +2,7 @@ import React from "react";
 import ListToolbar from "../../shared/ListToolbar";
 import ListCard from "../../shared/ListCard";
 import { User as UserIcon, Building2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Staff {
   id: number;
@@ -35,6 +36,8 @@ const StaffTab: React.FC<StaffTabProps> = ({
   mockStaff,
   companies,
 }) => {
+  const navigate = useNavigate();
+
   // Build filter map dynamically from companies
   const filterMap: Record<string, number[]> = {
     all: companies.map((c) => c.id),
@@ -63,6 +66,10 @@ const StaffTab: React.FC<StaffTabProps> = ({
     return matchesSearch && matchesFilter;
   });
 
+  const handleStaffClick = (staff: Staff) => {
+    navigate(`/staffs/${staff.id}`);
+  };
+
   return (
     <div className="space-y-4">
       <ListToolbar
@@ -82,6 +89,7 @@ const StaffTab: React.FC<StaffTabProps> = ({
           <UserIcon size={48} className="mx-auto text-slate-300 mb-4" />
         }
         notFoundMessage="Nenhum membro da equipe encontrado"
+        onClick={handleStaffClick}
       >
         {(staff) => (
           <>

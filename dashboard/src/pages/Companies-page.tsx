@@ -5,6 +5,7 @@ import ListCard from "../components/shared/ListCard";
 import { type Company } from "../types/index";
 import { Modal } from "../components/ui/Modal";
 import { Building2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Mockup companies based on the data schema
 const MOCK_COMPANIES: Company[] = [
@@ -35,6 +36,7 @@ const MOCK_COMPANIES: Company[] = [
 ];
 
 const CompaniesPage: React.FC = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,6 +47,10 @@ const CompaniesPage: React.FC = () => {
       company.cnpj.includes(search);
     return matchesSearch;
   });
+
+  const handleCompanyClick = (company: Company) => {
+    navigate(`/companies/${company.id}`);
+  };
 
   return (
     <PageContainer>
@@ -75,6 +81,7 @@ const CompaniesPage: React.FC = () => {
           <Building2 size={48} className="mx-auto text-slate-300 mb-4" />
         }
         notFoundMessage="Nenhuma empresa encontrada"
+        onClick={handleCompanyClick}
       >
         {(company) => (
           <>

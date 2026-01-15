@@ -3,6 +3,7 @@ import ListToolbar from "../shared/ListToolbar";
 import ListCard from "../shared/ListCard";
 import Badge from "../ui/Badge";
 import { User as UserIcon, Building2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Company {
   id: number;
@@ -27,6 +28,8 @@ const CompaniesTab: React.FC<CompaniesTabProps> = ({
   setCompanyFilter,
   companies,
 }) => {
+  const navigate = useNavigate();
+
   // Map UI filter to company role
   const filterMap: Record<string, string[]> = {
     all: ["production", "service"],
@@ -43,6 +46,10 @@ const CompaniesTab: React.FC<CompaniesTabProps> = ({
       filterMap[companyFilter]?.includes(company.role);
     return matchesSearch && matchesFilter;
   });
+
+  const handleCompanyClick = (company: Company) => {
+    navigate(`/companies/${company.id}`);
+  };
 
   return (
     <div className="space-y-4">
@@ -67,6 +74,7 @@ const CompaniesTab: React.FC<CompaniesTabProps> = ({
           <Building2 size={48} className="mx-auto text-slate-300 mb-4" />
         }
         notFoundMessage="Nenhuma empresa encontrada"
+        onClick={handleCompanyClick}
       >
         {(company) => (
           <>
