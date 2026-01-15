@@ -61,6 +61,18 @@
   --color-badge-admin-text: var(--color-primary);
   --color-badge-company-text: var(--color-badge-default-text);
   --color-badge-controller-text: var(--color-badge-pending-text);
+  --color-badge-production-bg: var(--color-toast-warning-bg);
+  --color-badge-production-text: var(--color-toast-warning-text);
+  --color-badge-service-bg: var(--color-toast-success-bg);
+  --color-badge-service-text: var(--color-toast-success-text);
+  --color-badge-credentialed-bg: var(--color-toast-warning-bg);
+  --color-badge-credentialed-text: var(--color-toast-warning-text);
+  --color-badge-pending-bg: var(--color-badge-default-bg);
+  --color-badge-pending-text: var(--color-badge-default-text);
+  --color-badge-checked-in-bg: var(--color-toast-success-bg);
+  --color-badge-checked-in-text: var(--color-toast-success-text);
+  --color-badge-checked-out-bg: var(--color-toast-error-bg);
+  --color-badge-checked-out-text: var(--color-toast-error-text);
 
   /* Cores tipos */
   --color-event-bg: var(--color-primary);

@@ -2,31 +2,36 @@ import React from "react";
 import { MetricCard } from "../../shared/MetricCard";
 import Card from "../../ui/Card";
 import * as Progress from "@radix-ui/react-progress";
-import { Building2, Users } from "lucide-react";
+import { Building2, Users, Calendar } from "lucide-react";
 
 interface OverviewTabProps {
   totalStaff: number;
-  companiesStaff: Array<{
+  eventsStaff: Array<{
     name: string;
-    role: string;
     staffCount: number;
   }>;
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({
   totalStaff,
-  companiesStaff,
+  eventsStaff,
 }) => (
   <div className="space-y-6">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <MetricCard
-        title="Empresas no Evento"
+        title="Eventos no Projeto"
+        value={5}
+        icon={<Calendar />}
+        color="event"
+      />
+      <MetricCard
+        title="Empresas no Projeto"
         value={5}
         icon={<Building2 />}
         color="company"
       />
       <MetricCard
-        title="Equipe no Evento"
+        title="Equipe no Projeto"
         value={42}
         icon={<Users />}
         color="user"
@@ -35,47 +40,26 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
 
     <Card>
       <h2 className="text-xl font-semibold text-text-title mb-6">
-        Status de Check-in/Check-out
+        Conclusão dos eventos
       </h2>
       <div className="space-y-6">
         {/* Check-in Progress */}
         <div>
           <div className="flex justify-between items-center mb-2">
             <label className="text-sm font-medium text-text-subtitle">
-              Check-in Realizado
+              Eventos Concluídos
             </label>
             <span className="text-sm font-semibold text-text-title">
-              35 / 42 (83%)
+              3 / 5 (60%)
             </span>
           </div>
           <Progress.Root
             className="relative overflow-hidden bg-slate-200 rounded-full w-full h-3"
-            value={83}
+            value={60}
           >
             <Progress.Indicator
               className="bg-green-500 h-full transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(-${100 - 83}%)` }}
-            />
-          </Progress.Root>
-        </div>
-
-        {/* Check-out Progress */}
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-medium text-text-subtitle">
-              Check-out Realizado
-            </label>
-            <span className="text-sm font-semibold text-text-title">
-              28 / 35 (80%)
-            </span>
-          </div>
-          <Progress.Root
-            className="relative overflow-hidden bg-slate-200 rounded-full w-full h-3"
-            value={80}
-          >
-            <Progress.Indicator
-              className="bg-blue-500 h-full transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(-${100 - 80}%)` }}
+              style={{ transform: `translateX(-${100 - 60}%)` }}
             />
           </Progress.Root>
         </div>
@@ -84,24 +68,21 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
 
     <Card>
       <h2 className="text-xl font-semibold text-text-title mb-6">
-        Equipe por Empresa
+        Staffs por eventos
       </h2>
       <div className="space-y-4">
-        {companiesStaff.map((company, index) => {
-          const percentage = (company.staffCount / totalStaff) * 100;
+        {eventsStaff.map((event, index) => {
+          const percentage = (event.staffCount / totalStaff) * 100;
           return (
             <div key={index}>
               <div className="flex justify-between items-center mb-2">
                 <div>
                   <p className="text-sm font-medium text-text-title">
-                    {company.name}
-                  </p>
-                  <p className="text-xs text-text-subtitle">
-                    Role: {company.role}
+                    {event.name}
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-text-title">
-                  {company.staffCount} staffs
+                  {event.staffCount} staffs
                 </span>
               </div>
               <Progress.Root

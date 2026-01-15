@@ -26,7 +26,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         color="company"
       />
       <MetricCard
-        title="Equipe no Evento"
+        title="Staffs no Evento"
         value={42}
         icon={<Users />}
         color="user"
@@ -38,6 +38,26 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         Status de Check-in/Check-out
       </h2>
       <div className="space-y-6">
+        {/* Credenciamento Progress */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <label className="text-sm font-medium text-text-subtitle">
+              Credenciamento Realizado
+            </label>
+            <span className="text-sm font-semibold text-text-title">
+              30 / 35 (90%)
+            </span>
+          </div>
+          <Progress.Root
+            className="relative overflow-hidden bg-slate-200 rounded-full w-full h-3"
+            value={90}
+          >
+            <Progress.Indicator
+              className="bg-toast-warning-border h-full transition-transform duration-300 ease-in-out"
+              style={{ transform: `translateX(-${100 - 90}%)` }}
+            />
+          </Progress.Root>
+        </div>
         {/* Check-in Progress */}
         <div>
           <div className="flex justify-between items-center mb-2">
@@ -53,7 +73,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             value={83}
           >
             <Progress.Indicator
-              className="bg-green-500 h-full transition-transform duration-300 ease-in-out"
+              className="bg-toast-success-border h-full transition-transform duration-300 ease-in-out"
               style={{ transform: `translateX(-${100 - 83}%)` }}
             />
           </Progress.Root>
@@ -74,7 +94,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             value={80}
           >
             <Progress.Indicator
-              className="bg-blue-500 h-full transition-transform duration-300 ease-in-out"
+              className="bg-toast-error-border h-full transition-transform duration-300 ease-in-out"
               style={{ transform: `translateX(-${100 - 80}%)` }}
             />
           </Progress.Root>
@@ -84,7 +104,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
 
     <Card>
       <h2 className="text-xl font-semibold text-text-title mb-6">
-        Equipe por Empresa
+        Staffs por Empresa
       </h2>
       <div className="space-y-4">
         {companiesStaff.map((company, index) => {
@@ -95,9 +115,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 <div>
                   <p className="text-sm font-medium text-text-title">
                     {company.name}
-                  </p>
-                  <p className="text-xs text-text-subtitle">
-                    Role: {company.role}
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-text-title">

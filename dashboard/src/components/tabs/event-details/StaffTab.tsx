@@ -2,14 +2,19 @@ import React, { useState } from "react";
 import ListToolbar from "../../shared/ListToolbar";
 import ListCard from "../../shared/ListCard";
 import { Modal } from "../../ui/Modal";
-import { User as UserIcon, Building2 } from "lucide-react";
+import Badge from "../../ui/Badge";
+import { User as UserIcon, Building2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatDateTime } from "../../../lib/dateUtils";
 
 interface Staff {
   id: number;
   name: string;
   cpf: string;
   company_id: number;
+  last_action?: "check-in" | "check-out" | "credentialed" | "pending";
+  checkin_time?: string;
+  checkout_time?: string;
 }
 
 interface Company {
@@ -35,27 +40,17 @@ const StaffTab: React.FC<StaffTabProps> = ({
   staffFilter,
   setStaffFilter,
   mockStaff,
-  companies,
 }) => {
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Build filter map dynamically from companies
-  const filterMap: Record<string, number[]> = {
-    all: companies.map((c) => c.id),
-  };
-
-  companies.forEach((company) => {
-    filterMap[`company${company.id}`] = [company.id];
-  });
-
   // Build filter options dynamically from companies
   const filterOptions = [
-    { value: "all", label: "Todas Empresas" },
-    ...companies.map((company) => ({
-      value: `company${company.id}`,
-      label: company.name,
-    })),
+    { value: "all", label: "Todos" },
+    { value: "check-in", label: "Check-in" },
+    { value: "check-out", label: "Check-out" },
+    { value: "credentialed", label: "Credenciado" },
+    { value: "pending", label: "Pendente" },
   ];
 
   const filteredStaff = mockStaff.filter((staff) => {
@@ -64,7 +59,8 @@ const StaffTab: React.FC<StaffTabProps> = ({
       staff.cpf.includes(staffSearch);
     const matchesFilter =
       staffFilter === "all" ||
-      filterMap[staffFilter]?.includes(staff.company_id);
+      filterOptions.find((option) => option.value === staffFilter)?.value ===
+        staff.last_action;
     return matchesSearch && matchesFilter;
   });
 
@@ -77,7 +73,7 @@ const StaffTab: React.FC<StaffTabProps> = ({
       <ListToolbar
         searchPlaceholder="Buscar por Nome ou CPF..."
         filterOptions={filterOptions}
-        addLabel="Adicionar Equipe"
+        addLabel="Adicionar Staff"
         onAdd={() => setModalOpen(true)}
         searchValue={staffSearch}
         onSearchChange={setStaffSearch}
@@ -113,16 +109,42 @@ const StaffTab: React.FC<StaffTabProps> = ({
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="text-title font-semibold">{staff.name}</h3>
+                  <Badge
+                    variant={staff.last_action ? staff.last_action : "pending"}
+                  />
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
-                  <span className="flex items-center gap-1">
-                    <UserIcon size={14} />
-                    {staff.cpf}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Building2 size={14} />
-                    Empresa #{staff.company_id}
-                  </span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
+                    <span className="flex items-center gap-1">
+                      <UserIcon size={14} />
+                      {staff.cpf}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Building2 size={14} />
+                      Empresa #{staff.company_id}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
+                    {
+                      <span className="flex items-center gap-1">
+                        <Clock size={14} />
+                        In:{" "}
+                        {staff.checkin_time
+                          ? formatDateTime(staff.checkin_time)
+                          : "N/A"}
+                      </span>
+                    }
+                    {
+                      <span className="flex items-center gap-1">
+                        <Clock size={14} />
+                        Out:{" "}
+                        {staff.checkout_time
+                          ? formatDateTime(staff.checkout_time)
+                          : "N/A"}
+                      </span>
+                    }
+                  </div>
                 </div>
               </div>
             </ListCard.Body>

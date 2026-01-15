@@ -58,8 +58,8 @@ const EventsTab: React.FC<EventsTabProps> = ({
         searchPlaceholder="Buscar por Nome do Evento..."
         filterOptions={[
           { value: "all", label: "Todos" },
-          { value: "open", label: "Abertos" },
-          { value: "close", label: "Fechados" },
+          { value: "open", label: "Ativos" },
+          { value: "close", label: "Concluídos" },
         ]}
         addLabel="Adicionar Evento"
         onAdd={() => setModalOpen(true)}
@@ -97,15 +97,12 @@ const EventsTab: React.FC<EventsTabProps> = ({
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="text-title font-semibold">{event.name}</h3>
-                  <Badge variant="open" />
+                  <Badge variant={event.status} />
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
                   <span className="flex items-center gap-1">
                     <Calendar size={14} />
                     {event.date_begin} - {event.date_end}
-                  </span>
-                  <span className="text-xs">
-                    Status: {event.status === "open" ? "Aberto" : "Fechado"}
                   </span>
                 </div>
               </div>

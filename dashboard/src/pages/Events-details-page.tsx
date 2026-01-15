@@ -29,18 +29,26 @@ const EventDetailsPage: React.FC = () => {
       name: "João Silva",
       cpf: "123.456.789-00",
       company_id: 1,
+      last_action: "check-out" as const,
+      checkin_time: "2026-01-15T08:30:00",
+      checkout_time: "2026-01-15T17:45:00",
     },
     {
       id: 2,
       name: "Maria Santos",
       cpf: "987.654.321-00",
       company_id: 1,
+      last_action: "credentialed" as const,
+      checkin_time: "2026-01-15T09:00:00",
+      checkout_time: "2026-01-15T18:30:00",
     },
     {
       id: 3,
       name: "Pedro Costa",
       cpf: "456.789.123-00",
       company_id: 2,
+      last_action: "check-in" as const,
+      checkin_time: "2026-01-15T09:15:00",
     },
     {
       id: 4,
@@ -53,6 +61,9 @@ const EventDetailsPage: React.FC = () => {
       name: "Carlos Mendes",
       cpf: "789.123.456-00",
       company_id: 3,
+      last_action: "check-out" as const,
+      checkin_time: "2026-01-15T07:00:00",
+      checkout_time: "2026-01-15T16:00:00",
     },
   ];
 
@@ -172,7 +183,7 @@ const EventDetailsPage: React.FC = () => {
             ),
           },
           {
-            title: "Equipe",
+            title: "Staffs",
             content: (
               <StaffTab
                 staffSearch={staffSearch}

@@ -57,6 +57,21 @@ export interface EventCompany {
   company_id: number;
 }
 
+export interface EventStaff {
+  id: number;
+  event_id: number;
+  staff_cpf: string;
+  lastCheck?: Check;
+}
+
+export interface Check {
+  id: number;
+  action: "check-in" | "check-out";
+  timestamp: string;
+  events_staff_id: number;
+  user_control_id: number;
+}
+
 // Dashboard types
 export interface DashboardMetrics {
   activeEvents: number;

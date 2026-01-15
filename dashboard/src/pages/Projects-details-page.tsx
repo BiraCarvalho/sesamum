@@ -88,12 +88,12 @@ const ProjectDetailsPage: React.FC = () => {
 
   // Example data - replace with real data from API
   const totalStaff = 42;
-  const companiesStaff = [
-    { name: "Acme Productions", role: "production", staffCount: 15 },
-    { name: "Tech Solutions", role: "service", staffCount: 12 },
-    { name: "Event Masters", role: "service", staffCount: 8 },
-    { name: "Creative Studios", role: "production", staffCount: 5 },
-    { name: "Global Services", role: "service", staffCount: 2 },
+  const eventsStaff = [
+    { name: "Evento 1", staffCount: 15 },
+    { name: "Evento 2", staffCount: 12 },
+    { name: "Evento 3", staffCount: 8 },
+    { name: "Evento 4", staffCount: 5 },
+    { name: "Evento 5", staffCount: 2 },
   ];
 
   return (
@@ -150,10 +150,7 @@ const ProjectDetailsPage: React.FC = () => {
           {
             title: "Visão Geral",
             content: (
-              <OverviewTab
-                totalStaff={totalStaff}
-                companiesStaff={companiesStaff}
-              />
+              <OverviewTab totalStaff={totalStaff} eventsStaff={eventsStaff} />
             ),
           },
           {

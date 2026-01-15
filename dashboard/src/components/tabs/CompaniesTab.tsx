@@ -98,7 +98,7 @@ const CompaniesTab: React.FC<CompaniesTabProps> = ({
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="text-title font-semibold">{company.name}</h3>
-                  <Badge />
+                  <Badge variant={company.role} />
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
                   <span className="flex items-center gap-1">
@@ -109,7 +109,6 @@ const CompaniesTab: React.FC<CompaniesTabProps> = ({
                     <UserIcon size={14} />
                     {company.staffCount} staffs
                   </span>
-                  <span className="text-xs">Role: {company.role}</span>
                 </div>
               </div>
             </ListCard.Body>

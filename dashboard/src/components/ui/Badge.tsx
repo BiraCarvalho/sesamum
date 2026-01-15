@@ -27,6 +27,30 @@ const variants = {
     style: "bg-badge-default-bg text-badge-controller-text",
     label: "Controlador",
   },
+  "check-in": {
+    style: "bg-badge-open-bg text-badge-open-text",
+    label: "Check-in",
+  },
+  "check-out": {
+    style: "bg-badge-closed-bg text-badge-closed-text",
+    label: "Check-out",
+  },
+  credentialed: {
+    style: "bg-badge-credentialed-bg text-badge-credentialed-text",
+    label: "Credenciado",
+  },
+  production: {
+    style: "bg-badge-production-bg text-badge-production-text",
+    label: "Produção",
+  },
+  service: {
+    style: "bg-badge-service-bg text-badge-service-text",
+    label: "Serviço",
+  },
+  pending: {
+    style: "bg-badge-pending-bg text-badge-pending-text",
+    label: "Pendente",
+  },
 };
 
 interface BadgeProps {
