@@ -1,0 +1,151 @@
+import type { Event } from "../../types";
+
+/**
+ * Mock Events Data
+ * Simulates the response from GET /api/v1/events/
+ *
+ * This data includes varied dates for calendar testing and different event statuses.
+ * When implementing CRUD operations in MSW handlers, this array can be used as initial state.
+ */
+export let mockEvents: Event[] = [
+  {
+    id: 1,
+    name: "Festival de Música 2024",
+    date_begin: "2025-12-25T10:00:00Z",
+    date_end: "2025-12-25T22:00:00Z",
+    status: "open",
+    project_id: 1,
+    type: "event",
+    location: "Arena Principal",
+    staffs_qnt: 45,
+  },
+  {
+    id: 2,
+    name: "Conferência Tech Brasil",
+    date_begin: "2025-12-28T09:00:00Z",
+    date_end: "2025-12-30T18:00:00Z",
+    status: "open",
+    project_id: 2,
+    type: "project",
+    location: "Centro de Convenções",
+    staffs_qnt: 32,
+  },
+  {
+    id: 3,
+    name: "Workshop de Design",
+    date_begin: "2026-01-05T14:00:00Z",
+    date_end: "2026-01-05T17:00:00Z",
+    status: "open",
+    project_id: 1,
+    type: "event",
+    location: "Studio A",
+    staffs_qnt: 15,
+  },
+  {
+    id: 4,
+    name: "Evento Corporativo - Ano Novo",
+    date_begin: "2026-01-10T19:00:00Z",
+    date_end: "2026-01-13T23:30:00Z",
+    status: "open",
+    project_id: 3,
+    type: "project",
+    location: "Hotel Grand Plaza",
+    staffs_qnt: 28,
+  },
+  {
+    id: 5,
+    name: "Feira de Negócios",
+    date_begin: "2026-01-15T08:00:00Z",
+    date_end: "2026-01-15T18:00:00Z",
+    status: "open",
+    project_id: 2,
+    type: "event",
+    location: "Expo Center Sul",
+    staffs_qnt: 67,
+  },
+  {
+    id: 6,
+    name: "Show Beneficente",
+    date_begin: "2025-12-20T20:00:00Z",
+    date_end: "2025-12-23T23:00:00Z",
+    status: "close",
+    project_id: 1,
+    type: "project",
+    location: "Teatro Municipal",
+    staffs_qnt: 22,
+  },
+];
+
+/**
+ * Helper function to reset events data (useful for testing)
+ */
+export const resetMockEvents = () => {
+  mockEvents = [
+    {
+      id: 1,
+      name: "Festival de Música 2024",
+      date_begin: "2025-12-25T10:00:00Z",
+      date_end: "2025-12-25T22:00:00Z",
+      status: "open",
+      project_id: 1,
+      type: "event",
+      location: "Arena Principal",
+      staffs_qnt: 45,
+    },
+    {
+      id: 2,
+      name: "Conferência Tech Brasil",
+      date_begin: "2025-12-28T09:00:00Z",
+      date_end: "2025-12-30T18:00:00Z",
+      status: "open",
+      project_id: 2,
+      type: "project",
+      location: "Centro de Convenções",
+      staffs_qnt: 32,
+    },
+    {
+      id: 3,
+      name: "Workshop de Design",
+      date_begin: "2026-01-05T14:00:00Z",
+      date_end: "2026-01-05T17:00:00Z",
+      status: "open",
+      project_id: 1,
+      type: "event",
+      location: "Studio A",
+      staffs_qnt: 15,
+    },
+    {
+      id: 4,
+      name: "Evento Corporativo - Ano Novo",
+      date_begin: "2026-01-10T19:00:00Z",
+      date_end: "2026-01-13T23:30:00Z",
+      status: "open",
+      project_id: 3,
+      type: "project",
+      location: "Hotel Grand Plaza",
+      staffs_qnt: 28,
+    },
+    {
+      id: 5,
+      name: "Feira de Negócios",
+      date_begin: "2026-01-15T08:00:00Z",
+      date_end: "2026-01-15T18:00:00Z",
+      status: "open",
+      project_id: 2,
+      type: "event",
+      location: "Expo Center Sul",
+      staffs_qnt: 67,
+    },
+    {
+      id: 6,
+      name: "Show Beneficente",
+      date_begin: "2025-12-20T20:00:00Z",
+      date_end: "2025-12-23T23:00:00Z",
+      status: "close",
+      project_id: 1,
+      type: "project",
+      location: "Teatro Municipal",
+      staffs_qnt: 22,
+    },
+  ];
+};

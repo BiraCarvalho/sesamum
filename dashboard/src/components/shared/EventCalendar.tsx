@@ -43,7 +43,7 @@ export const EventCalendar: React.FC<CalendarViewProps> = ({
       locale={ptbrLocales}
       events={events_converted}
       eventClick={(info) => {
-        navigate(info.event.url || "/events/" + String(info.event.title));
+        navigate(info.event.url || "/events/" + String(info.event.id));
       }}
     />
   );

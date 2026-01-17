@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { RefreshCw, Calendar, Building2, Users, Briefcase } from "lucide-react";
 import { PageContainer, PageHeader } from "../components/layout/PageLayout";
 import { MetricCard } from "../components/shared/MetricCard";
@@ -11,166 +11,74 @@ import {
   type RecentActivity,
 } from "../types";
 import { formatDateTime } from "../lib/dateUtils";
+import { dashboardService, eventsService } from "../api/services";
 
-// Mock data for dashboard metrics
-const MOCK_DASHBOARD_METRICS: DashboardMetrics = {
-  activeEvents: 12,
-  totalProjects: 8,
-  totalCompanies: 45,
-  totalUsers: 156,
-  recentCheckIns: 89,
-};
+/**
+ * Dashboard Page
+ *
+ * Main dashboard view showing key metrics, calendar, and recent activities.
+ * Uses MSW-backed API services for metrics and events.
+ * Recent activities are stored in and retrieved from localStorage.
+ *
+ * Features:
+ * - Real-time data polling (10-minute intervals)
+ * - Manual refresh capability
+ * - Loading states
+ * - Error handling
+ * - localStorage for recent activities
+ */
 
-// Extended mock events with varied dates for calendar testing
-const MOCK_EVENTS: Event[] = [
-  {
-    id: 1,
-    name: "Festival de Música 2024",
-    date_begin: "2025-12-25T10:00:00Z",
-    date_end: "2025-12-25T22:00:00Z",
-    status: "open",
-    project_id: 1,
-    type: "event",
-    location: "Arena Principal",
-    staffs_qnt: 45,
-  },
-  {
-    id: 2,
-    name: "Conferência Tech Brasil",
-    date_begin: "2025-12-28T09:00:00Z",
-    date_end: "2025-12-30T18:00:00Z",
-    status: "open",
-    project_id: 2,
-    type: "project",
-    location: "Centro de Convenções",
-    staffs_qnt: 32,
-  },
-  {
-    id: 3,
-    name: "Workshop de Design",
-    date_begin: "2026-01-05T14:00:00Z",
-    date_end: "2026-01-05T17:00:00Z",
-    status: "open",
-    project_id: 1,
-    type: "event",
-    location: "Studio A",
-    staffs_qnt: 15,
-  },
-  {
-    id: 4,
-    name: "Evento Corporativo - Ano Novo",
-    date_begin: "2026-01-10T19:00:00Z",
-    date_end: "2026-01-13T23:30:00Z",
-    status: "open",
-    project_id: 3,
-    type: "project",
-    location: "Hotel Grand Plaza",
-    staffs_qnt: 28,
-  },
-  {
-    id: 5,
-    name: "Feira de Negócios",
-    date_begin: "2026-01-15T08:00:00Z",
-    date_end: "2026-01-15T18:00:00Z",
-    status: "open",
-    project_id: 2,
-    type: "event",
-    location: "Expo Center Sul",
-    staffs_qnt: 67,
-  },
-  {
-    id: 6,
-    name: "Show Beneficente",
-    date_begin: "2025-12-20T20:00:00Z",
-    date_end: "2025-12-23T23:00:00Z",
-    status: "close",
-    project_id: 1,
-    type: "project",
-    location: "Teatro Municipal",
-    staffs_qnt: 22,
-  },
-];
+const STORAGE_KEY = "sesamum_recent_activities";
 
-// Mock recent activities
-const MOCK_RECENT_ACTIVITIES: RecentActivity[] = [
-  {
-    id: 1,
-    type: "event",
-    title: "Corso",
-    //description: "",
-    timestamp: "2024-12-24T10:30:00Z",
-  },
-  {
-    id: 2,
-    type: "checkin",
-    title: "Check-ins registrados",
-    description: "15 funcionários fizeram check-in no Workshop de Design",
-    timestamp: "2024-12-24T09:45:00Z",
-  },
-  {
-    id: 3,
-    type: "user",
-    title: "Novo usuário cadastrado",
-    description: "Carlos Silva foi adicionado como usuário de controle",
-    timestamp: "2024-12-24T08:15:00Z",
-  },
-  {
-    id: 4,
-    type: "project",
-    title: "Projeto atualizado",
-    description: "Status do Projeto Eventos 2024 alterado para finalizado",
-    timestamp: "2024-12-23T16:20:00Z",
-  },
-  {
-    id: 5,
-    type: "staff",
-    title: "Evento encerrado",
-    description: "Show Beneficente foi finalizado com sucesso",
-    timestamp: "2024-12-23T14:10:00Z",
-  },
-  {
-    id: 6,
-    type: "company",
-    title: "Check-ins registrados",
-    description: "20 funcionários fizeram check-in no Conferência Tech Brasil",
-    timestamp: "2024-12-22T11:30:00Z",
-  },
-  {
-    id: 7,
-    type: "user",
-    title: "Usuário atualizado",
-    description: "Carlos Silva atualizou seu perfil",
-    timestamp: "2024-12-22T10:00:00Z",
-  },
-  {
-    id: 8,
-    type: "project",
-    title: "Novo projeto criado",
-    description: "Projeto Eventos 2025 foi criado com sucesso",
-    timestamp: "2024-12-21T15:45:00Z",
-  },
-];
-
-// Mock API functions
+// API fetch functions using the new service layer
 const fetchDashboardMetrics = async (): Promise<DashboardMetrics> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return MOCK_DASHBOARD_METRICS;
+  const response = await dashboardService.getMetrics();
+  return response.data;
 };
 
 const fetchEvents = async (): Promise<Event[]> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return MOCK_EVENTS;
+  const response = await eventsService.getAll();
+  return response.data;
 };
 
-const fetchRecentActivities = async (): Promise<RecentActivity[]> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return MOCK_RECENT_ACTIVITIES;
+// Helper function to get activities from localStorage
+const getActivitiesFromStorage = (): RecentActivity[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error("Error reading activities from localStorage:", error);
+    return [];
+  }
 };
 
 const DashboardPage: React.FC = () => {
+  // State for activities from localStorage
+  const [activities, setActivities] = useState<RecentActivity[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+
+  // Load activities from localStorage on mount
+  useEffect(() => {
+    const loadActivities = () => {
+      setActivitiesLoading(true);
+      const stored = getActivitiesFromStorage();
+      setActivities(stored);
+      setActivitiesLoading(false);
+    };
+
+    loadActivities();
+
+    // Listen for storage changes from other tabs/windows
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        loadActivities();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   // Real-time data hooks with 10-minute intervals
   const {
     data: metrics,
@@ -188,38 +96,27 @@ const DashboardPage: React.FC = () => {
     refetch: refetchEvents,
   } = useRealTimeData(fetchEvents, { interval: 600000 });
 
-  const {
-    data: activities,
-    loading: activitiesLoading,
-    error: activitiesError,
-    lastUpdate: activitiesLastUpdate,
-    refetch: refetchActivities,
-  } = useRealTimeData(fetchRecentActivities, { interval: 600000 });
-
   const handleRefresh = async () => {
-    await Promise.all([refetchMetrics(), refetchEvents(), refetchActivities()]);
+    await Promise.all([refetchMetrics(), refetchEvents()]);
+    // Reload activities from localStorage
+    setActivities(getActivitiesFromStorage());
   };
 
   const refreshButton = (
     <button
       onClick={handleRefresh}
-      disabled={metricsLoading || eventsLoading || activitiesLoading}
+      disabled={metricsLoading || eventsLoading}
       className="flex text-title text-sm items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       <RefreshCw
         size={16}
-        className={
-          metricsLoading || eventsLoading || activitiesLoading
-            ? "animate-spin"
-            : ""
-        }
+        className={metricsLoading || eventsLoading ? "animate-spin" : ""}
       />
       Atualizar
     </button>
   );
 
-  const lastUpdate =
-    metricsLastUpdate || eventsLastUpdate || activitiesLastUpdate;
+  const lastUpdate = metricsLastUpdate || eventsLastUpdate;
 
   return (
     <PageContainer>
@@ -234,11 +131,10 @@ const DashboardPage: React.FC = () => {
       />
 
       {/* Error Messages */}
-      {(metricsError || eventsError || activitiesError) && (
+      {(metricsError || eventsError) && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-700 text-sm font-medium">
-            Erro ao carregar dados:{" "}
-            {metricsError || eventsError || activitiesError}
+            Erro ao carregar dados: {metricsError || eventsError}
           </p>
         </div>
       )}
