@@ -11,6 +11,7 @@ import AvatarComponent from "../components/ui/Avatar";
 import { Modal } from "../components/ui/Modal";
 import { usersService, eventsService } from "../api/services";
 import type { User, Event } from "../types";
+import { useRecentlyVisited } from "../hooks/useRecentlyVisited";
 
 // Mock company names (should come from companies API in production)
 const COMPANY_NAMES: Record<number, string> = {
@@ -24,6 +25,7 @@ const COMPANY_NAMES: Record<number, string> = {
 
 const UsersDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { addRecentVisit } = useRecentlyVisited();
   const [eventSearch, setEventSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -44,6 +46,23 @@ const UsersDetailsPage: React.FC = () => {
         // Fetch user details
         const userResponse = await usersService.getById(Number(id));
         setUser(userResponse.data);
+
+        // Track visit to recently visited
+        const roleLabels = {
+          admin: "Administrador",
+          company: "Gerente",
+          control: "Controle",
+        };
+        addRecentVisit({
+          id: Date.now(),
+          type: "user",
+          title: userResponse.data.name,
+          description:
+            roleLabels[userResponse.data.role as keyof typeof roleLabels] ||
+            userResponse.data.role,
+          url: `/users/${id}`,
+          entityId: userResponse.data.id,
+        });
 
         // Fetch events for this user
         const eventsResponse = await eventsService.getByUser(Number(id));

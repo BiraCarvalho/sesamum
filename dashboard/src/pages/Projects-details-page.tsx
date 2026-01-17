@@ -12,9 +12,11 @@ import CompaniesTab from "../components/tabs/CompaniesTab";
 import { projectsService, eventsService } from "../api/services";
 import type { Project, Event } from "../types";
 import { formatDate } from "../lib/dateUtils";
+import { useRecentlyVisited } from "../hooks/useRecentlyVisited";
 
 const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { addRecentVisit } = useRecentlyVisited();
   const [eventSearch, setEventSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
   const [companySearch, setCompanySearch] = useState("");
@@ -36,6 +38,17 @@ const ProjectDetailsPage: React.FC = () => {
         // Fetch project details
         const projectResponse = await projectsService.getById(Number(id));
         setProject(projectResponse.data);
+
+        // Track visit to recently visited
+        addRecentVisit({
+          id: Date.now(),
+          type: "project",
+          title: projectResponse.data.name,
+          description:
+            projectResponse.data.status === "open" ? "Aberto" : "Fechado",
+          url: `/projects/${id}`,
+          entityId: projectResponse.data.id,
+        });
 
         // Fetch events for this project
         const eventsResponse = await eventsService.getAll({

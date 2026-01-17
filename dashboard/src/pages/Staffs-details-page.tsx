@@ -11,6 +11,7 @@ import AvatarComponent from "../components/ui/Avatar";
 import { staffsService, eventsService } from "../api/services";
 import type { Staff, Event } from "../types";
 import { formatDateTime } from "../lib/dateUtils";
+import { useRecentlyVisited } from "../hooks/useRecentlyVisited";
 
 // Mock company names (should come from companies API in production)
 const COMPANY_NAMES: Record<number, string> = {
@@ -23,6 +24,7 @@ const COMPANY_NAMES: Record<number, string> = {
 
 const StaffsDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { addRecentVisit } = useRecentlyVisited();
   const [eventSearch, setEventSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
   const [staff, setStaff] = useState<Staff | null>(null);
@@ -42,6 +44,16 @@ const StaffsDetailsPage: React.FC = () => {
         // Fetch staff details
         const staffResponse = await staffsService.getById(Number(id));
         setStaff(staffResponse.data);
+
+        // Track visit to recently visited
+        addRecentVisit({
+          id: Date.now(),
+          type: "staff",
+          title: staffResponse.data.name,
+          description: staffResponse.data.email,
+          url: `/staffs/${id}`,
+          entityId: staffResponse.data.id,
+        });
 
         // Fetch events for this staff member
         const eventsResponse = await eventsService.getByStaff(

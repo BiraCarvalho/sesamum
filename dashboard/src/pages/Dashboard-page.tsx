@@ -5,6 +5,7 @@ import { MetricCard } from "../components/shared/MetricCard";
 import { EventCalendar } from "../components/shared/EventCalendar";
 import { RecentActivityList } from "../components/shared/RecentActivity";
 import { useRealTimeData } from "../hooks/useRealTimeData";
+import { useRecentlyVisited } from "../hooks/useRecentlyVisited";
 import {
   type Event,
   type DashboardMetrics,
@@ -25,10 +26,8 @@ import { dashboardService, eventsService } from "../api/services";
  * - Manual refresh capability
  * - Loading states
  * - Error handling
- * - localStorage for recent activities
+ * - localStorage for recent activities with useRecentlyVisited hook
  */
-
-const STORAGE_KEY = "sesamum_recent_activities";
 
 // API fetch functions using the new service layer
 const fetchDashboardMetrics = async (): Promise<DashboardMetrics> => {
@@ -41,18 +40,8 @@ const fetchEvents = async (): Promise<Event[]> => {
   return response.data;
 };
 
-// Helper function to get activities from localStorage
-const getActivitiesFromStorage = (): RecentActivity[] => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error("Error reading activities from localStorage:", error);
-    return [];
-  }
-};
-
 const DashboardPage: React.FC = () => {
+  const { getRecentVisits } = useRecentlyVisited();
   // State for activities from localStorage
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
@@ -61,7 +50,7 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     const loadActivities = () => {
       setActivitiesLoading(true);
-      const stored = getActivitiesFromStorage();
+      const stored = getRecentVisits();
       setActivities(stored);
       setActivitiesLoading(false);
     };
@@ -69,15 +58,13 @@ const DashboardPage: React.FC = () => {
     loadActivities();
 
     // Listen for storage changes from other tabs/windows
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) {
-        loadActivities();
-      }
+    const handleStorageChange = () => {
+      loadActivities();
     };
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  }, [getRecentVisits]);
 
   // Real-time data hooks with 10-minute intervals
   const {
@@ -99,7 +86,7 @@ const DashboardPage: React.FC = () => {
   const handleRefresh = async () => {
     await Promise.all([refetchMetrics(), refetchEvents()]);
     // Reload activities from localStorage
-    setActivities(getActivitiesFromStorage());
+    setActivities(getRecentVisits());
   };
 
   const refreshButton = (

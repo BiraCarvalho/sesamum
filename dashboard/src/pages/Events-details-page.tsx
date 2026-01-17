@@ -16,9 +16,11 @@ import {
 } from "../api/services";
 import type { Event, CompanyWithEventData, Staff } from "../types";
 import { formatDate } from "../lib/dateUtils";
+import { useRecentlyVisited } from "../hooks/useRecentlyVisited";
 
 const EventDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { addRecentVisit } = useRecentlyVisited();
   const [staffSearch, setStaffSearch] = useState("");
   const [staffFilter, setStaffFilter] = useState("all");
   const [companySearch, setCompanySearch] = useState("");
@@ -41,6 +43,18 @@ const EventDetailsPage: React.FC = () => {
         // Fetch event details
         const eventResponse = await eventsService.getById(Number(id));
         setEvent(eventResponse.data);
+
+        // Track visit to recently visited
+        addRecentVisit({
+          id: Date.now(),
+          type: "event",
+          title: eventResponse.data.name,
+          description: `${formatDate(
+            eventResponse.data.date_begin
+          )} - ${formatDate(eventResponse.data.date_end)}`,
+          url: `/events/${id}`,
+          entityId: eventResponse.data.id,
+        });
 
         // Fetch companies for this event
         const companiesResponse = await companiesService.getByEvent(Number(id));

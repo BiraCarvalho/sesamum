@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Calendar,
   Clock,
@@ -41,6 +42,14 @@ export const RecentActivityList: React.FC<RecentActivityProps> = ({
   title,
   maxItems = 5,
 }) => {
+  const navigate = useNavigate();
+
+  const handleActivityClick = (activity: RecentActivity) => {
+    if (activity.url) {
+      navigate(activity.url);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-xl border border-slate-100 p-6">
@@ -87,7 +96,9 @@ export const RecentActivityList: React.FC<RecentActivityProps> = ({
           {displayedActivities.map((activity) => (
             <button
               key={activity.id}
+              onClick={() => handleActivityClick(activity)}
               className="flex w-full items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors hover:cursor-pointer"
+              disabled={!activity.url}
             >
               <div className="shrink-0 mt-1.5">
                 {getActivityIcon(activity.type)}

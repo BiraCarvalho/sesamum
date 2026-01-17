@@ -11,9 +11,11 @@ import Badge from "../components/ui/Badge";
 import { Modal } from "../components/ui/Modal";
 import { companiesService, eventsService } from "../api/services";
 import type { Company, Event } from "../types";
+import { useRecentlyVisited } from "../hooks/useRecentlyVisited";
 
 const CompaniesDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { addRecentVisit } = useRecentlyVisited();
   const [eventSearch, setEventSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -34,6 +36,16 @@ const CompaniesDetailsPage: React.FC = () => {
         // Fetch company details
         const companyResponse = await companiesService.getById(Number(id));
         setCompany(companyResponse.data);
+
+        // Track visit to recently visited
+        addRecentVisit({
+          id: Date.now(),
+          type: "company",
+          title: companyResponse.data.name,
+          description: `CNPJ: ${companyResponse.data.cnpj}`,
+          url: `/companies/${id}`,
+          entityId: companyResponse.data.id,
+        });
 
         // Fetch events for this company
         const eventsResponse = await eventsService.getByCompany(Number(id));

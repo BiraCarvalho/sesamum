@@ -125,6 +125,8 @@ export interface RecentActivity {
   description?: string;
   timestamp: string;
   icon?: string;
+  url?: string;
+  entityId?: number;
 }
 
 export interface MetricCardProps {
