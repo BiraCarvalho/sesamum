@@ -100,4 +100,49 @@ export const eventsService = {
   delete: (id: number) => {
     return apiClient.delete(ENDPOINTS.EVENTS.DELETE(id));
   },
+
+  /**
+   * Get all events for a specific user
+   *
+   * @param userId - User ID
+   * @returns Promise with array of events assigned to the user
+   * @example
+   * const response = await eventsService.getByUser(1);
+   * const userEvents = response.data;
+   */
+  getByUser: (userId: number) => {
+    return apiClient.get<Event[]>(ENDPOINTS.EVENT_USERS.LIST, {
+      params: { user_id: userId },
+    });
+  },
+
+  /**
+   * Get all events for a specific staff member
+   *
+   * @param staffCpf - Staff CPF
+   * @returns Promise with array of events assigned to the staff
+   * @example
+   * const response = await eventsService.getByStaff('123.456.789-00');
+   * const staffEvents = response.data;
+   */
+  getByStaff: (staffCpf: string) => {
+    return apiClient.get<Event[]>(ENDPOINTS.EVENT_STAFF.LIST, {
+      params: { staff_cpf: staffCpf },
+    });
+  },
+
+  /**
+   * Get all events for a specific company
+   *
+   * @param companyId - Company ID
+   * @returns Promise with array of events assigned to the company
+   * @example
+   * const response = await eventsService.getByCompany(1);
+   * const companyEvents = response.data;
+   */
+  getByCompany: (companyId: number) => {
+    return apiClient.get<Event[]>(ENDPOINTS.EVENT_COMPANIES.LIST, {
+      params: { company_id: companyId },
+    });
+  },
 };

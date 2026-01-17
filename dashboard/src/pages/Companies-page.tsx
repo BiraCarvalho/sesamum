@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageHeader, PageContainer } from "../components/layout/PageLayout";
 import ListToolbar from "../components/shared/ListToolbar";
 import ListCard from "../components/shared/ListCard";
@@ -6,42 +6,37 @@ import { type Company } from "../types/index";
 import { Modal } from "../components/ui/Modal";
 import { Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// Mockup companies based on the data schema
-const MOCK_COMPANIES: Company[] = [
-  {
-    id: 1,
-    name: "ProduEvents Ltda",
-    type: "production",
-    cnpj: "12.345.678/0001-90",
-  },
-  {
-    id: 2,
-    name: "Tech Solutions SP",
-    type: "service",
-    cnpj: "23.456.789/0001-01",
-  },
-  {
-    id: 3,
-    name: "Esportes & Eventos",
-    type: "production",
-    cnpj: "34.567.890/0001-12",
-  },
-  {
-    id: 4,
-    name: "Agro Expo Brasil",
-    type: "service",
-    cnpj: "45.678.901/0001-23",
-  },
-];
+import { companiesService } from "../api/services";
 
 const CompaniesPage: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredCompanies = MOCK_COMPANIES.filter((company) => {
+  // Fetch companies
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await companiesService.getAll();
+        setCompanies(response.data);
+      } catch (err) {
+        setError("Erro ao carregar empresas");
+        console.error("Error fetching companies:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
+
+  const filteredCompanies = companies.filter((company) => {
     const matchesSearch =
       company.name.toLowerCase().includes(search.toLowerCase()) ||
       company.cnpj.includes(search);
@@ -55,6 +50,12 @@ const CompaniesPage: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader title="Empresas" subtitle="Gerencie empresas do sistema." />
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700 text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       <ListToolbar
         searchPlaceholder="Buscar por Nome ou CNPJ..."

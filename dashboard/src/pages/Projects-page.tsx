@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageHeader, PageContainer } from "../components/layout/PageLayout";
 import ListToolbar from "../components/shared/ListToolbar";
 import ListCard from "../components/shared/ListCard";
@@ -8,52 +8,35 @@ import { Building2, Briefcase, Calendar } from "lucide-react";
 import { formatDate } from "../lib/dateUtils";
 import Badge from "../components/ui/Badge";
 import { useNavigate } from "react-router-dom";
-
-// Mockup projects based on the data schema
-const MOCK_PROJECTS: Project[] = [
-  {
-    id: 1,
-    name: "Festival de Verão 2024",
-    status: "open",
-    company_id: 1,
-    date_begin: "2024-01-10",
-    date_end: "2024-01-20",
-    events_qnt: 5,
-  },
-  {
-    id: 2,
-    name: "Tech Summit SP",
-    status: "open",
-    company_id: 2,
-    date_begin: "2024-02-15",
-    date_end: "2024-02-18",
-    events_qnt: 3,
-  },
-  {
-    id: 3,
-    name: "Corrida Noturna",
-    status: "close",
-    company_id: 3,
-    date_begin: "2024-03-10",
-    date_end: "2024-03-12",
-    events_qnt: 2,
-  },
-  {
-    id: 4,
-    name: "Expo Agro 2025",
-    status: "open",
-    company_id: 4,
-    date_begin: "2024-04-05",
-    date_end: "2024-04-10",
-    events_qnt: 4,
-  },
-];
+import { projectsService } from "../api/services";
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch projects
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await projectsService.getAll();
+        setProjects(response.data);
+      } catch (err) {
+        setError("Erro ao carregar projetos");
+        console.error("Error fetching projects:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   // Map UI filter to project status
   const filterMap: Record<string, string[]> = {
@@ -62,7 +45,7 @@ const ProjectsPage: React.FC = () => {
     close: ["close"],
   };
 
-  const filteredProjects = MOCK_PROJECTS.filter((project) => {
+  const filteredProjects = projects.filter((project) => {
     const matchesSearch = project.name
       .toLowerCase()
       .includes(search.toLowerCase());
@@ -77,6 +60,12 @@ const ProjectsPage: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader title="Projetos" subtitle="Gerencie projetos do sistema." />
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700 text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       <ListToolbar
         searchPlaceholder="Buscar projeto..."

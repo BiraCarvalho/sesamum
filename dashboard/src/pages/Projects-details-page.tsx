@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import {
   DetailsPageContainer,
   PageHeader,
@@ -8,44 +9,54 @@ import {
 import OverviewTab from "../components/tabs/project-details/OverviewTab";
 import EventsTab from "../components/tabs/EventsTab";
 import CompaniesTab from "../components/tabs/CompaniesTab";
-import { Modal } from "../components/ui/Modal";
-//import { type  } from "../types/index";
+import { projectsService, eventsService } from "../api/services";
+import type { Project, Event } from "../types";
+import { formatDate } from "../lib/dateUtils";
 
 const ProjectDetailsPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const [eventSearch, setEventSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
   const [companySearch, setCompanySearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("all");
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [project, setProject] = useState<Project | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch project details and their events
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      if (!id) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch project details
+        const projectResponse = await projectsService.getById(Number(id));
+        setProject(projectResponse.data);
+
+        // Fetch events for this project
+        const eventsResponse = await eventsService.getAll({
+          project_id: Number(id),
+        });
+        setEvents(eventsResponse.data);
+      } catch (err) {
+        setError("Erro ao carregar projeto");
+        console.error("Error fetching project data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjectData();
+  }, [id]);
 
   const handleEdit = () => {
-    setEditModalOpen(true);
+    // Future: Open edit modal
+    console.log("Edit project", id);
   };
-
-  // Mock events data - replace with real data from API
-  const MOCK_EVENTS = [
-    {
-      id: 1,
-      name: "Corso",
-      date_begin: "22/02/2026",
-      date_end: "25/02/2026",
-      status: "open",
-    },
-    {
-      id: 2,
-      name: "Festival de Música",
-      date_begin: "15/03/2026",
-      date_end: "17/03/2026",
-      status: "open",
-    },
-    {
-      id: 3,
-      name: "Conferência Tech",
-      date_begin: "10/01/2026",
-      date_end: "12/01/2026",
-      status: "close",
-    },
-  ];
 
   // Mock company data - replace with real data from API
   const MOCK_COMPANIES = [
@@ -86,7 +97,7 @@ const ProjectDetailsPage: React.FC = () => {
     },
   ];
 
-  // Example data - replace with real data from API
+  // Example data - replace with real data from API when available
   const totalStaff = 42;
   const eventsStaff = [
     { name: "Evento 1", staffCount: 15 },
@@ -96,52 +107,66 @@ const ProjectDetailsPage: React.FC = () => {
     { name: "Evento 5", staffCount: 2 },
   ];
 
+  if (loading) {
+    return (
+      <DetailsPageContainer>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-subtitle">Carregando...</p>
+        </div>
+      </DetailsPageContainer>
+    );
+  }
+
+  if (error || !project) {
+    return (
+      <DetailsPageContainer>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-red-700">{error || "Projeto não encontrado"}</p>
+        </div>
+      </DetailsPageContainer>
+    );
+  }
+
   return (
     <DetailsPageContainer>
-      <PageHeader
-        title="TUSCA 026"
-        subtitle="Aquele evento loucura padrão em 2026"
-        onEdit={handleEdit}
-      />
-
-      <Modal
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        title="Editar Projeto"
-        description="Formulário de edição de projeto em breve."
-      >
-        {/* Future form goes here */}
-        <div className="text-sm text-gray-600">
-          Formulário de edição de projeto.
-        </div>
-      </Modal>
+      <PageHeader title={project.name} subtitle="Projeto" onEdit={handleEdit} />
 
       <InformationsDetail>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <div>
             <label className="text-sm font-medium text-text-subtitle">
               Status
             </label>
-            <p className="mt-1 text-text-title">Aberto</p>
+            <p className="mt-1 text-text-title">
+              {project.status === "open" ? "Aberto" : "Fechado"}
+            </p>
           </div>
           <div>
             <label className="text-sm font-medium text-text-subtitle">
-              Local
+              Quantidade de Eventos
             </label>
-            <p className="mt-1 text-text-title">Avenida Paulista, São Paulo</p>
+            <p className="mt-1 text-text-title">{project.events_qnt || 0}</p>
           </div>
-          <div>
-            <label className="text-sm font-medium text-text-subtitle">
-              Data de Início
-            </label>
-            <p className="mt-1 text-text-title">22/02/2026</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-text-subtitle">
-              Data de Término
-            </label>
-            <p className="mt-1 text-text-title">25/02/2026</p>
-          </div>
+          {project.date_begin && (
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                Data de Início
+              </label>
+              <p className="mt-1 text-text-title">
+                {formatDate(project.date_begin)}
+              </p>
+            </div>
+          )}
+          {project.date_end && (
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                Data de Término
+              </label>
+              <p className="mt-1 text-text-title">
+                {formatDate(project.date_end)}
+              </p>
+            </div>
+          )}
         </div>
       </InformationsDetail>
 
@@ -161,7 +186,7 @@ const ProjectDetailsPage: React.FC = () => {
                 setEventSearch={setEventSearch}
                 eventFilter={eventFilter}
                 setEventFilter={setEventFilter}
-                events={MOCK_EVENTS}
+                events={events}
               />
             ),
           },

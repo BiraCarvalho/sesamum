@@ -10,6 +10,10 @@
 
 export { dashboardService } from "./dashboard";
 export { eventsService } from "./events";
+export { companiesService } from "./companies";
+export { projectsService } from "./projects";
+export { staffsService } from "./staffs";
+export { usersService } from "./users";
 
 // Future exports to add as domains are implemented:
 // export { authService } from './auth';

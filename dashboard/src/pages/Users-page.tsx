@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageHeader, PageContainer } from "../components/layout/PageLayout";
 import ListToolbar from "../components/shared/ListToolbar";
 import ListCard from "../components/shared/ListCard";
@@ -7,48 +7,35 @@ import { type User } from "../types/index";
 import { Modal } from "../components/ui/Modal";
 import { Building2, User as UserIcon, Shield, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// Mockup users based on the data schema
-const MOCK_USERS: User[] = [
-  {
-    id: 1,
-    name: "João Silva",
-    email: "joao.silva@produevent.com",
-    picture: "https://thispersondoesnotexist.com/",
-    role: "admin",
-    company_id: 1,
-  },
-  {
-    id: 2,
-    name: "Maria Santos",
-    picture: "",
-    email: "maria.santos@techsolutions.com",
-    role: "company",
-    company_id: 2,
-  },
-  {
-    id: 3,
-    name: "Pedro Costa",
-    picture: "",
-    email: "pedro.costa@esportes.com",
-    role: "control",
-    company_id: 3,
-  },
-  {
-    id: 4,
-    name: "Ana Oliveira",
-    picture: "",
-    email: "ana.oliveira@agroexpo.com",
-    role: "company",
-    company_id: 4,
-  },
-];
+import { usersService } from "../api/services";
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await usersService.getAll();
+        setUsers(response.data);
+      } catch (err) {
+        setError("Erro ao carregar usuários");
+        console.error("Error fetching users:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   // Map UI filter to user role
   const filterMap: Record<string, string[]> = {
@@ -58,7 +45,7 @@ const UsersPage: React.FC = () => {
     control: ["control"],
   };
 
-  const filteredUsers = MOCK_USERS.filter((user) => {
+  const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase());
@@ -73,6 +60,12 @@ const UsersPage: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader title="Usuários" subtitle="Gerencie usuários do sistema." />
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700 text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       <ListToolbar
         searchPlaceholder="Buscar por Nome ou Email..."

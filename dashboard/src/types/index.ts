@@ -16,6 +16,12 @@ export interface Company {
   cnpj: string;
 }
 
+// Extended Company type with event relationship data
+export interface CompanyWithEventData extends Company {
+  role: "production" | "service";
+  staffCount: number;
+}
+
 // Staff type based on copilot-instructions
 export interface Staff {
   id: number;
@@ -62,6 +68,12 @@ export interface EventStaff {
   event_id: number;
   staff_cpf: string;
   lastCheck?: Check;
+}
+
+export interface EventUser {
+  id: number;
+  user_id: number;
+  event_id: number;
 }
 
 export interface Check {

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import {
   DetailsPageContainer,
   PageHeader,
@@ -8,105 +9,63 @@ import {
 import OverviewTab from "../components/tabs/event-details/OverviewTab";
 import StaffTab from "../components/tabs/event-details/StaffTab";
 import CompaniesTab from "../components/tabs/CompaniesTab";
-import { Modal } from "../components/ui/Modal";
-//import { type  } from "../types/index";
+import {
+  eventsService,
+  companiesService,
+  staffsService,
+} from "../api/services";
+import type { Event, CompanyWithEventData, Staff } from "../types";
+import { formatDate } from "../lib/dateUtils";
 
 const EventDetailsPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const [staffSearch, setStaffSearch] = useState("");
   const [staffFilter, setStaffFilter] = useState("all");
   const [companySearch, setCompanySearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("all");
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [companies, setCompanies] = useState<CompanyWithEventData[]>([]);
+  const [staffs, setStaffs] = useState<Staff[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch event details, companies, and staffs
+  useEffect(() => {
+    const fetchEventData = async () => {
+      if (!id) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch event details
+        const eventResponse = await eventsService.getById(Number(id));
+        setEvent(eventResponse.data);
+
+        // Fetch companies for this event
+        const companiesResponse = await companiesService.getByEvent(Number(id));
+        setCompanies(companiesResponse.data);
+
+        // Fetch staffs for this event
+        const staffsResponse = await staffsService.getByEvent(Number(id));
+        setStaffs(staffsResponse.data);
+      } catch (err) {
+        setError("Erro ao carregar evento");
+        console.error("Error fetching event data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEventData();
+  }, [id]);
 
   const handleEdit = () => {
-    setEditModalOpen(true);
+    // Future: Open edit modal
+    console.log("Edit event", id);
   };
 
-  // Mock staff data - replace with real data from API
-  const MOCK_STAFF = [
-    {
-      id: 1,
-      name: "João Silva",
-      cpf: "123.456.789-00",
-      company_id: 1,
-      last_action: "check-out" as const,
-      checkin_time: "2026-01-15T08:30:00",
-      checkout_time: "2026-01-15T17:45:00",
-    },
-    {
-      id: 2,
-      name: "Maria Santos",
-      cpf: "987.654.321-00",
-      company_id: 1,
-      last_action: "credentialed" as const,
-      checkin_time: "2026-01-15T09:00:00",
-      checkout_time: "2026-01-15T18:30:00",
-    },
-    {
-      id: 3,
-      name: "Pedro Costa",
-      cpf: "456.789.123-00",
-      company_id: 2,
-      last_action: "check-in" as const,
-      checkin_time: "2026-01-15T09:15:00",
-    },
-    {
-      id: 4,
-      name: "Ana Oliveira",
-      cpf: "321.654.987-00",
-      company_id: 2,
-    },
-    {
-      id: 5,
-      name: "Carlos Mendes",
-      cpf: "789.123.456-00",
-      company_id: 3,
-      last_action: "check-out" as const,
-      checkin_time: "2026-01-15T07:00:00",
-      checkout_time: "2026-01-15T16:00:00",
-    },
-  ];
-
-  // Mock company data - replace with real data from API
-  const MOCK_COMPANIES = [
-    {
-      id: 1,
-      name: "Acme Productions",
-      cnpj: "12.345.678/0001-90",
-      role: "production",
-      staffCount: 15,
-    },
-    {
-      id: 2,
-      name: "Tech Solutions",
-      cnpj: "98.765.432/0001-10",
-      role: "service",
-      staffCount: 12,
-    },
-    {
-      id: 3,
-      name: "Event Masters",
-      cnpj: "45.678.912/0001-34",
-      role: "service",
-      staffCount: 8,
-    },
-    {
-      id: 4,
-      name: "Creative Studios",
-      cnpj: "32.165.498/0001-56",
-      role: "production",
-      staffCount: 5,
-    },
-    {
-      id: 5,
-      name: "Global Services",
-      cnpj: "78.912.345/0001-78",
-      role: "service",
-      staffCount: 2,
-    },
-  ];
-
-  // Example data - replace with real data from API
+  // Example data - to be calculated from EventStaff/EventCompany APIs
   const totalStaff = 42;
   const companiesStaff = [
     { name: "Acme Productions", role: "production", staffCount: 15 },
@@ -116,58 +75,82 @@ const EventDetailsPage: React.FC = () => {
     { name: "Global Services", role: "service", staffCount: 2 },
   ];
 
+  if (loading) {
+    return (
+      <DetailsPageContainer>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-subtitle">Carregando...</p>
+        </div>
+      </DetailsPageContainer>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <DetailsPageContainer>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-red-700">{error || "Evento não encontrado"}</p>
+        </div>
+      </DetailsPageContainer>
+    );
+  }
+
   return (
     <DetailsPageContainer>
       <PageHeader
-        title="Corso"
-        subtitle="Evento de Carnaval 2026"
+        title={event.name}
+        subtitle={`Evento${event.type === "project" ? " de Projeto" : ""}`}
         onEdit={handleEdit}
       />
 
-      <Modal
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        title="Editar Evento"
-        description="Formulário de edição de evento em breve."
-      >
-        {/* Future form goes here */}
-        <div className="text-sm text-gray-600">
-          Formulário de edição de evento.
-        </div>
-      </Modal>
-
       <InformationsDetail>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="text-sm font-medium text-text-subtitle">
               Status
             </label>
-            <p className="mt-1 text-text-title">Aberto</p>
+            <p className="mt-1 text-text-title">
+              {event.status === "open" ? "Aberto" : "Fechado"}
+            </p>
           </div>
-          <div>
-            <label className="text-sm font-medium text-text-subtitle">
-              Projeto
-            </label>
-            <p className="mt-1 text-text-title">Carnaval 2026</p>
-          </div>
+          {event.project_id && (
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                Projeto ID
+              </label>
+              <p className="mt-1 text-text-title">{event.project_id}</p>
+            </div>
+          )}
           <div>
             <label className="text-sm font-medium text-text-subtitle">
               Data de Início
             </label>
-            <p className="mt-1 text-text-title">22/02/2026</p>
+            <p className="mt-1 text-text-title">
+              {formatDate(event.date_begin)}
+            </p>
           </div>
           <div>
             <label className="text-sm font-medium text-text-subtitle">
               Data de Término
             </label>
-            <p className="mt-1 text-text-title">25/02/2026</p>
+            <p className="mt-1 text-text-title">{formatDate(event.date_end)}</p>
           </div>
-          <div>
-            <label className="text-sm font-medium text-text-subtitle">
-              Local
-            </label>
-            <p className="mt-1 text-text-title">Avenida Paulista, São Paulo</p>
-          </div>
+          {event.location && (
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                Local
+              </label>
+              <p className="mt-1 text-text-title">{event.location}</p>
+            </div>
+          )}
+          {event.staffs_qnt !== undefined && (
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                Quantidade de Staffs
+              </label>
+              <p className="mt-1 text-text-title">{event.staffs_qnt}</p>
+            </div>
+          )}
         </div>
       </InformationsDetail>
 
@@ -190,8 +173,8 @@ const EventDetailsPage: React.FC = () => {
                 setStaffSearch={setStaffSearch}
                 staffFilter={staffFilter}
                 setStaffFilter={setStaffFilter}
-                mockStaff={MOCK_STAFF}
-                companies={MOCK_COMPANIES}
+                mockStaff={staffs}
+                companies={companies}
               />
             ),
           },
@@ -203,7 +186,7 @@ const EventDetailsPage: React.FC = () => {
                 setCompanySearch={setCompanySearch}
                 companyFilter={companyFilter}
                 setCompanyFilter={setCompanyFilter}
-                companies={MOCK_COMPANIES}
+                companies={companies}
               />
             ),
           },

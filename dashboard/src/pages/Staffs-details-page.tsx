@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import {
   DetailsPageContainer,
   PageHeader,
@@ -7,89 +8,114 @@ import {
 } from "../components/layout/DetailsPageLayout";
 import EventsTab from "../components/tabs/EventsTab";
 import AvatarComponent from "../components/ui/Avatar";
-import { Modal } from "../components/ui/Modal";
-//import { type  } from "../types/index";
+import { staffsService, eventsService } from "../api/services";
+import type { Staff, Event } from "../types";
+import { formatDateTime } from "../lib/dateUtils";
+
+// Mock company names (should come from companies API in production)
+const COMPANY_NAMES: Record<number, string> = {
+  1: "ProduEvents Ltda",
+  2: "Tech Solutions SP",
+  3: "Esportes & Eventos",
+  4: "Agro Expo Brasil",
+  5: "Cultural Events RJ",
+};
 
 const StaffsDetailsPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const [eventSearch, setEventSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [staff, setStaff] = useState<Staff | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleEdit = () => {
-    setEditModalOpen(true);
-  };
+  // Fetch staff details and their events
+  useEffect(() => {
+    const fetchStaffData = async () => {
+      if (!id) return;
 
-  // Mock events data - replace with real data from API
-  const MOCK_EVENTS = [
-    {
-      id: 1,
-      name: "Corso",
-      date_begin: "22/02/2026",
-      date_end: "25/02/2026",
-      status: "open",
-    },
-    {
-      id: 2,
-      name: "Festival de Música",
-      date_begin: "15/03/2026",
-      date_end: "17/03/2026",
-      status: "open",
-    },
-    {
-      id: 3,
-      name: "Conferência Tech",
-      date_begin: "10/01/2026",
-      date_end: "12/01/2026",
-      status: "close",
-    },
-  ];
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch staff details
+        const staffResponse = await staffsService.getById(Number(id));
+        setStaff(staffResponse.data);
+
+        // Fetch events for this staff member
+        const eventsResponse = await eventsService.getByStaff(
+          staffResponse.data.cpf
+        );
+        setEvents(eventsResponse.data);
+      } catch (err) {
+        setError("Erro ao carregar membro da equipe");
+        console.error("Error fetching staff data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStaffData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <DetailsPageContainer>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-subtitle">Carregando...</p>
+        </div>
+      </DetailsPageContainer>
+    );
+  }
+
+  if (error || !staff) {
+    return (
+      <DetailsPageContainer>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-red-700">{error || "Membro não encontrado"}</p>
+        </div>
+      </DetailsPageContainer>
+    );
+  }
 
   return (
     <DetailsPageContainer>
-      <PageHeader
-        title="Rafael Carvalho Ferreira"
-        subtitle="Membro da Equipe"
-        onEdit={handleEdit}
-      />
-
-      <Modal
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        title="Editar Membro"
-        description="Formulário de edição de membro em breve."
-      >
-        {/* Future form goes here */}
-        <div className="text-sm text-gray-600">
-          Formulário de edição de membro.
-        </div>
-      </Modal>
+      <PageHeader title={staff.name} subtitle={staff.email} />
 
       <InformationsDetail>
-        <div className="flex items-start gap-6">
-          <AvatarComponent
-            alt="Rafael Carvalho Ferreira"
-            src="https://thispersondoesnotexist.com/"
-            size={128}
-          />
+        <div className="flex items-center gap-6">
+          <AvatarComponent alt={staff.name} size={128} />
 
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-text-subtitle">
                 CPF
               </label>
-              <p className="mt-1 text-text-title">123.456.789-00</p>
+              <p className="mt-1 text-text-title">{staff.cpf}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                Email
+              </label>
+              <p className="mt-1 text-text-title">{staff.email}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-text-subtitle">
                 Empresa
               </label>
-              <p className="mt-1 text-text-title">Acme Productions</p>
+              <p className="mt-1 text-text-title">
+                {COMPANY_NAMES[staff.company_id] ||
+                  `Empresa ${staff.company_id}`}
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium text-text-subtitle">
                 Data de Credenciamento
               </label>
-              <p className="mt-1 text-text-title">15/01/2026</p>
+              <p className="mt-1 text-text-title">
+                {formatDateTime(staff.created_at)}
+              </p>
             </div>
           </div>
         </div>
@@ -105,7 +131,7 @@ const StaffsDetailsPage: React.FC = () => {
                 setEventSearch={setEventSearch}
                 eventFilter={eventFilter}
                 setEventFilter={setEventFilter}
-                events={MOCK_EVENTS}
+                events={events}
               />
             ),
           },

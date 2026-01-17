@@ -1,5 +1,12 @@
 import { dashboardHandlers } from "./handlers/dashboard";
 import { eventHandlers } from "./handlers/events";
+import { companyHandlers } from "./handlers/companies";
+import { projectHandlers } from "./handlers/projects";
+import { staffHandlers } from "./handlers/staffs";
+import { userHandlers } from "./handlers/users";
+import { eventUsersHandlers } from "./handlers/eventsUsers";
+import { eventStaffsHandlers } from "./handlers/eventsStaffs";
+import { eventCompaniesHandlers } from "./handlers/eventsCompanies";
 
 /**
  * MSW Handlers Index
@@ -11,11 +18,17 @@ import { eventHandlers } from "./handlers/events";
  *
  * Future handlers to add:
  * - authHandlers (login, refresh, logout)
- * - companyHandlers (CRUD operations)
- * - projectHandlers (CRUD operations)
- * - staffHandlers (CRUD operations)
- * - userHandlers (CRUD operations)
  * - checkHandlers (check-in/out operations)
  */
 
-export const handlers = [...dashboardHandlers, ...eventHandlers];
+export const handlers = [
+  ...dashboardHandlers,
+  ...eventHandlers,
+  ...companyHandlers,
+  ...projectHandlers,
+  ...staffHandlers,
+  ...userHandlers,
+  ...eventUsersHandlers,
+  ...eventStaffsHandlers,
+  ...eventCompaniesHandlers,
+];

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import {
   DetailsPageContainer,
   PageHeader,
@@ -8,47 +9,95 @@ import {
 import EventsTab from "../components/tabs/EventsTab";
 import AvatarComponent from "../components/ui/Avatar";
 import { Modal } from "../components/ui/Modal";
-//import { type  } from "../types/index";
+import { usersService, eventsService } from "../api/services";
+import type { User, Event } from "../types";
+
+// Mock company names (should come from companies API in production)
+const COMPANY_NAMES: Record<number, string> = {
+  0: "Administração Sesamum",
+  1: "ProduEvents Ltda",
+  2: "Tech Solutions SP",
+  3: "Esportes & Eventos",
+  4: "Agro Expo Brasil",
+  5: "Cultural Events RJ",
+};
 
 const UsersDetailsPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const [eventSearch, setEventSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch user details and their events
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!id) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch user details
+        const userResponse = await usersService.getById(Number(id));
+        setUser(userResponse.data);
+
+        // Fetch events for this user
+        const eventsResponse = await eventsService.getByUser(Number(id));
+        setEvents(eventsResponse.data);
+      } catch (err) {
+        setError("Erro ao carregar usuário");
+        console.error("Error fetching user data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [id]);
 
   const handleEdit = () => {
     setEditModalOpen(true);
   };
 
-  // Mock events data - replace with real data from API
-  const MOCK_EVENTS = [
-    {
-      id: 1,
-      name: "Corso",
-      date_begin: "22/02/2026",
-      date_end: "25/02/2026",
-      status: "open",
-    },
-    {
-      id: 2,
-      name: "Festival de Música",
-      date_begin: "15/03/2026",
-      date_end: "17/03/2026",
-      status: "open",
-    },
-    {
-      id: 3,
-      name: "Conferência Tech",
-      date_begin: "10/01/2026",
-      date_end: "12/01/2026",
-      status: "close",
-    },
-  ];
+  if (loading) {
+    return (
+      <DetailsPageContainer>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-subtitle">Carregando...</p>
+        </div>
+      </DetailsPageContainer>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <DetailsPageContainer>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-red-700">{error || "Usuário não encontrado"}</p>
+        </div>
+      </DetailsPageContainer>
+    );
+  }
+
+  // Helper function to get role label
+  const getRoleLabel = (role: string) => {
+    const roleLabels = {
+      admin: "Administrador",
+      company: "Gerente",
+      control: "Controle",
+    };
+    return roleLabels[role as keyof typeof roleLabels] || role;
+  };
 
   return (
     <DetailsPageContainer>
       <PageHeader
-        title="Rafael Carvalho Ferreira"
-        subtitle="Membro da Equipe"
+        title={user.name}
+        subtitle={getRoleLabel(user.role)}
         onEdit={handleEdit}
       />
 
@@ -66,36 +115,28 @@ const UsersDetailsPage: React.FC = () => {
 
       <InformationsDetail>
         <div className="flex items-start gap-6">
-          <AvatarComponent
-            alt="Rafael Carvalho Ferreira"
-            src="https://thispersondoesnotexist.com/"
-            size={128}
-          />
+          <AvatarComponent alt={user.name} src={user.picture} size={128} />
 
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-text-subtitle">
-                CPF
+                Email
               </label>
-              <p className="mt-1 text-text-title">123.456.789-00</p>
+              <p className="mt-1 text-text-title">{user.email}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                Função
+              </label>
+              <p className="mt-1 text-text-title">{getRoleLabel(user.role)}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-text-subtitle">
                 Empresa
               </label>
-              <p className="mt-1 text-text-title">Acme Productions</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-text-subtitle">
-                Email
-              </label>
-              <p className="mt-1 text-text-title">rafael.ferreira@acme.com</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-text-subtitle">
-                Data de Credenciamento
-              </label>
-              <p className="mt-1 text-text-title">15/01/2026</p>
+              <p className="mt-1 text-text-title">
+                {COMPANY_NAMES[user.company_id] || `Empresa ${user.company_id}`}
+              </p>
             </div>
           </div>
         </div>
@@ -111,7 +152,7 @@ const UsersDetailsPage: React.FC = () => {
                 setEventSearch={setEventSearch}
                 eventFilter={eventFilter}
                 setEventFilter={setEventFilter}
-                events={MOCK_EVENTS}
+                events={events}
               />
             ),
           },

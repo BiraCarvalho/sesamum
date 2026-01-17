@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageHeader, PageContainer } from "../components/layout/PageLayout";
 import ListToolbar from "../components/shared/ListToolbar";
 import ListCard from "../components/shared/ListCard";
@@ -8,63 +8,39 @@ import { Toast } from "../components/ui/Toast";
 import { Calendar, Building2, Users, MapPin } from "lucide-react";
 import Badge from "../components/ui/Badge";
 import { useNavigate } from "react-router-dom";
-
-// Mockup events based on the data schema
-const MOCK_EVENTS: Event[] = [
-  {
-    id: 1,
-    name: "Festival de Verão 2024",
-    date_begin: "2024-12-20T10:00:00Z",
-    date_end: "2024-12-22T23:00:00Z",
-    status: "open",
-    project_id: 1,
-    location: "Praia do Forte, Salvador",
-    staffs_qnt: 150,
-    companies: [
-      { id: 1, role: "production", event_id: 1, company_id: 1 },
-      { id: 2, role: "service", event_id: 1, company_id: 2 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Tech Summit SP",
-    date_begin: "2024-12-21T08:00:00Z",
-    date_end: "2024-12-21T20:00:00Z",
-    status: "open",
-    project_id: 2,
-    location: "Centro de Convenções, São Paulo",
-    staffs_qnt: 80,
-    companies: [{ id: 3, role: "production", event_id: 2, company_id: 3 }],
-  },
-  {
-    id: 3,
-    name: "Corrida Noturna",
-    date_begin: "2024-12-23T18:00:00Z",
-    date_end: "2024-12-23T23:00:00Z",
-    status: "close",
-    project_id: 3,
-    location: "Parque Ibirapuera, São Paulo",
-    staffs_qnt: 40,
-    companies: [
-      { id: 4, role: "production", event_id: 3, company_id: 4 },
-      { id: 5, role: "service", event_id: 3, company_id: 5 },
-    ],
-  },
-];
+import { eventsService } from "../api/services";
 
 const EventsPage: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [error, setError] = useState<string | null>(null);
   // Toast states
   const [successOpen, setSuccessOpen] = useState(false);
+
+  // Fetch events
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setError(null);
+        const response = await eventsService.getAll();
+        setEvents(response.data);
+      } catch (err) {
+        setError("Erro ao carregar eventos");
+        console.error("Error fetching events:", err);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   React.useEffect(() => {
     setSuccessOpen(true);
   }, []);
 
-  const filteredEvents = MOCK_EVENTS.filter((event) => {
+  const filteredEvents = events.filter((event) => {
     const matchesSearch = event.name
       .toLowerCase()
       .includes(search.toLowerCase());
@@ -87,6 +63,12 @@ const EventsPage: React.FC = () => {
         duration={2500}
       />
       <PageHeader title="Eventos" subtitle="Gerencie eventos do sistema." />
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700 text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       <ListToolbar
         searchPlaceholder="Buscar evento..."

@@ -387,10 +387,10 @@ http.get("/api/v1/events/", ({ request }) => {
 
 - **Endpoints**:
   - `GET /api/v1/dashboard/metrics/`
-  - `GET /api/v1/dashboard/activities/`
 - **Service**: `dashboardService` in `src/api/services/dashboard.ts`
 - **Handler**: `src/mocks/handlers/dashboard.ts`
 - **Data**: `src/mocks/data/dashboard.ts`
+- **Note**: Recent activities stored in localStorage
 
 #### Events
 
@@ -405,18 +405,70 @@ http.get("/api/v1/events/", ({ request }) => {
 - **Handler**: `src/mocks/handlers/events.ts`
 - **Data**: `src/mocks/data/events.ts`
 
+#### Companies
+
+- **Endpoints**:
+  - `GET /api/v1/companies/` (with filtering by type, search)
+  - `GET /api/v1/companies/:id/`
+  - `POST /api/v1/companies/`
+  - `PUT /api/v1/companies/:id/`
+  - `PATCH /api/v1/companies/:id/`
+  - `DELETE /api/v1/companies/:id/`
+- **Service**: `companiesService` in `src/api/services/companies.ts`
+- **Handler**: `src/mocks/handlers/companies.ts`
+- **Data**: `src/mocks/data/companies.ts`
+- **Pages**: Companies-page.tsx, Companies-details-page.tsx
+
+#### Projects
+
+- **Endpoints**:
+  - `GET /api/v1/projects/` (with filtering by status, company_id, search)
+  - `GET /api/v1/projects/:id/`
+  - `POST /api/v1/projects/`
+  - `PUT /api/v1/projects/:id/`
+  - `PATCH /api/v1/projects/:id/`
+  - `DELETE /api/v1/projects/:id/`
+- **Service**: `projectsService` in `src/api/services/projects.ts`
+- **Handler**: `src/mocks/handlers/projects.ts`
+- **Data**: `src/mocks/data/projects.ts`
+- **Pages**: Projects-page.tsx, Projects-details-page.tsx
+
+#### Staffs
+
+- **Endpoints**:
+  - `GET /api/v1/staffs/` (with filtering by company_id, search)
+  - `GET /api/v1/staffs/:id/`
+  - `POST /api/v1/staffs/`
+  - `PUT /api/v1/staffs/:id/`
+  - `PATCH /api/v1/staffs/:id/`
+  - `DELETE /api/v1/staffs/:id/`
+- **Service**: `staffsService` in `src/api/services/staffs.ts`
+- **Handler**: `src/mocks/handlers/staffs.ts`
+- **Data**: `src/mocks/data/staffs.ts`
+- **Pages**: Staffs-page.tsx
+
+#### Users
+
+- **Endpoints**:
+  - `GET /api/v1/users/` (with filtering by role, company_id, search)
+  - `GET /api/v1/users/:id/`
+  - `POST /api/v1/users/`
+  - `PUT /api/v1/users/:id/`
+  - `PATCH /api/v1/users/:id/`
+  - `DELETE /api/v1/users/:id/`
+- **Service**: `usersService` in `src/api/services/users.ts`
+- **Handler**: `src/mocks/handlers/users.ts`
+- **Data**: `src/mocks/data/users.ts`
+- **Pages**: Users-page.tsx
+
 ### 🔜 Pending Domains
 
 The following domains need to be implemented following the same pattern:
 
-- [ ] **Companies** - CRUD operations for companies
-- [ ] **Projects** - CRUD operations for projects
-- [ ] **Staffs** - CRUD operations for staff members
-- [ ] **Users** - CRUD operations for users
-- [ ] **Checks** - Check-in/out operations
 - [ ] **Auth** - Login, logout, token refresh
-- [ ] **Event Companies** - Relationship management
-- [ ] **Event Staffs** - Relationship management
+- [ ] **Checks** - Check-in/out operations
+- [ ] **Event Companies** - Relationship management (EventCompany)
+- [ ] **Event Staffs** - Relationship management (EventStaff)
 
 ---
 
@@ -697,10 +749,13 @@ If you encounter issues or have questions about MSW integration:
 
 MSW has been successfully integrated into the Sesamum dashboard project, providing:
 
-✅ Complete mock API layer for dashboard and events  
+✅ Complete mock API layer for 6 core domains (dashboard, events, companies, projects, staffs, users)  
 ✅ Type-safe API services with Axios  
-✅ Easy switching between mock and real API  
+✅ Easy switching between mock and real API via environment variable  
 ✅ Foundation for testing and development  
-✅ Clear migration path for remaining domains
+✅ Clear migration path for remaining domains (auth, checks, relationships)  
+✅ All main pages migrated to use API services  
+✅ Recent activities using localStorage for client-side persistence  
+✅ Environment-aware handlers using VITE_API_BASE_URL
 
 The system is production-ready for the implemented domains and provides a solid pattern for implementing the remaining features.
