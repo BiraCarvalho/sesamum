@@ -9,10 +9,17 @@ import {
 import OverviewTab from "../components/tabs/project-details/OverviewTab";
 import EventsTab from "../components/tabs/EventsTab";
 import CompaniesTab from "../components/tabs/CompaniesTab";
-import { projectsService, eventsService } from "../api/services";
+import {
+  projectsService,
+  eventsService,
+  eventCompaniesService,
+  eventStaffService,
+} from "../api/services";
 import type { Project, Event } from "../types";
 import { formatDate } from "../lib/dateUtils";
 import { useRecentlyVisited } from "../hooks/useRecentlyVisited";
+import { Modal } from "../components/ui/Modal";
+import { ProjectForm } from "../components/forms/ProjectForm";
 
 const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,8 +30,14 @@ const ProjectDetailsPage: React.FC = () => {
   const [companyFilter, setCompanyFilter] = useState("all");
   const [project, setProject] = useState<Project | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [totalStaff, setTotalStaff] = useState(0);
+  const [eventsStaffMetrics, setEventsStaffMetrics] = useState<
+    Array<{ name: string; staffCount: number }>
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Fetch project details and their events
   useEffect(() => {
@@ -55,6 +68,48 @@ const ProjectDetailsPage: React.FC = () => {
           project_id: Number(id),
         });
         setEvents(eventsResponse.data);
+
+        // Fetch companies for events in this project
+        const uniqueCompanies = new Map();
+        for (const event of eventsResponse.data) {
+          try {
+            const companiesResponse = await eventCompaniesService.getAll({
+              event_id: event.id,
+            });
+            companiesResponse.data.forEach((company) => {
+              if (!uniqueCompanies.has(company.id)) {
+                uniqueCompanies.set(company.id, company);
+              }
+            });
+          } catch (err) {
+            console.error(
+              `Error fetching companies for event ${event.id}:`,
+              err
+            );
+          }
+        }
+        setCompanies(Array.from(uniqueCompanies.values()));
+
+        // Fetch staff metrics for events
+        const staffMetrics = await Promise.all(
+          eventsResponse.data.map(async (event) => {
+            try {
+              const staffResponse = await eventStaffService.getAll({
+                event_id: event.id,
+              });
+              // The API returns Staff[] when filtering by event_id
+              return {
+                name: event.name,
+                staffCount: staffResponse.data.length,
+              };
+            } catch (err) {
+              console.error(`Error fetching staff for event ${event.id}:`, err);
+              return { name: event.name, staffCount: 0 };
+            }
+          })
+        );
+        setEventsStaffMetrics(staffMetrics);
+        setTotalStaff(staffMetrics.reduce((sum, e) => sum + e.staffCount, 0));
       } catch (err) {
         setError("Erro ao carregar projeto");
         console.error("Error fetching project data:", err);
@@ -67,58 +122,24 @@ const ProjectDetailsPage: React.FC = () => {
   }, [id]);
 
   const handleEdit = () => {
-    // Future: Open edit modal
-    console.log("Edit project", id);
+    setIsEditModalOpen(true);
   };
 
-  // Mock company data - replace with real data from API
-  const MOCK_COMPANIES = [
-    {
-      id: 1,
-      name: "Acme Productions",
-      cnpj: "12.345.678/0001-90",
-      role: "production",
-      staffCount: 15,
-    },
-    {
-      id: 2,
-      name: "Tech Solutions",
-      cnpj: "98.765.432/0001-10",
-      role: "service",
-      staffCount: 12,
-    },
-    {
-      id: 3,
-      name: "Event Masters",
-      cnpj: "45.678.912/0001-34",
-      role: "service",
-      staffCount: 8,
-    },
-    {
-      id: 4,
-      name: "Creative Studios",
-      cnpj: "32.165.498/0001-56",
-      role: "production",
-      staffCount: 5,
-    },
-    {
-      id: 5,
-      name: "Global Services",
-      cnpj: "78.912.345/0001-78",
-      role: "service",
-      staffCount: 2,
-    },
-  ];
+  const handleEditSuccess = async () => {
+    setIsEditModalOpen(false);
+    // Refetch project data
+    if (!id) return;
+    try {
+      const projectResponse = await projectsService.getById(Number(id));
+      setProject(projectResponse.data);
+    } catch (err) {
+      console.error("Error refetching project:", err);
+    }
+  };
 
-  // Example data - replace with real data from API when available
-  const totalStaff = 42;
-  const eventsStaff = [
-    { name: "Evento 1", staffCount: 15 },
-    { name: "Evento 2", staffCount: 12 },
-    { name: "Evento 3", staffCount: 8 },
-    { name: "Evento 4", staffCount: 5 },
-    { name: "Evento 5", staffCount: 2 },
-  ];
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+  };
 
   if (loading) {
     return (
@@ -188,7 +209,13 @@ const ProjectDetailsPage: React.FC = () => {
           {
             title: "Visão Geral",
             content: (
-              <OverviewTab totalStaff={totalStaff} eventsStaff={eventsStaff} />
+              <OverviewTab
+                totalStaff={totalStaff}
+                eventsStaff={eventsStaffMetrics}
+                totalEvents={events.length}
+                totalCompanies={companies.length}
+                closedEvents={events.filter((e) => e.status === "close").length}
+              />
             ),
           },
           {
@@ -211,13 +238,27 @@ const ProjectDetailsPage: React.FC = () => {
                 setCompanySearch={setCompanySearch}
                 companyFilter={companyFilter}
                 setCompanyFilter={setCompanyFilter}
-                companies={MOCK_COMPANIES}
+                companies={companies}
               />
             ),
           },
         ]}
         defaultTab="Visão Geral"
       />
+
+      {/* Edit Project Modal */}
+      <Modal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        title="Editar Projeto"
+      >
+        <ProjectForm
+          mode="edit"
+          project={project || undefined}
+          onSuccess={handleEditSuccess}
+          onCancel={handleEditCancel}
+        />
+      </Modal>
     </DetailsPageContainer>
   );
 };

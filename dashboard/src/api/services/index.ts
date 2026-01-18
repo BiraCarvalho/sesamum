@@ -14,6 +14,8 @@ export { companiesService } from "./companies";
 export { projectsService } from "./projects";
 export { staffsService } from "./staffs";
 export { usersService } from "./users";
+export { eventCompaniesService } from "./eventCompanies";
+export { eventStaffService } from "./eventStaff";
 
 // Future exports to add as domains are implemented:
 // export { authService } from './auth';

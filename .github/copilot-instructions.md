@@ -50,6 +50,117 @@ Sesamum is an event staff credentialing platform with a Django 6/DRF backend and
   - All types/interfaces must be defined in `src/types/index.ts` and kept in sync with backend models.
   - Use Context API for global state, avoid Redux.
 
+### Forms Pattern
+
+Forms in the Sesamum dashboard follow a consistent pattern for validation, submission, and user feedback:
+
+#### Form Structure
+
+1. **Schema Definition** (`src/schemas/`):
+
+   - Create a dedicated schema file using Zod for validation (e.g., `projectSchema.ts`)
+   - Export both the schema and the inferred TypeScript type
+   - Use utilities from `src/lib/dateUtils.ts` for date validation
+   - Create utilities in `src/lib/` for common form tasks (e.g., formatting dates)
+   - Example:
+
+     ```typescript
+     import { z } from "zod";
+     import { isValidDate } from "../lib/dateUtils";
+
+     export const projectSchema = z.object({
+       name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
+       description: z.string().optional(),
+       // ... other fields
+     });
+
+     export type ProjectFormData = z.infer<typeof projectSchema>;
+     ```
+
+2. **Form Component** (`src/components/forms/`):
+
+   - Use `react-hook-form` with Zod resolver for validation
+   - Import schema from `src/schemas/`
+   - Use `IMaskInput` from `react-imask` for masked inputs (dates, CPF, CNPJ)
+   - Date format: Always use DD/MM/YYYY for user input, convert to ISO (YYYY-MM-DD) for API
+   - Props interface: `{ mode: "create" | "edit", data?: T, onSuccess: () => void, onCancel: () => void }`
+   - Handle loading states, errors, and submission feedback
+   - Example structure:
+
+     ```typescript
+     import { useForm, Controller } from "react-hook-form";
+     import { zodResolver } from "@hookform/resolvers/zod";
+     import { IMaskInput } from "react-imask";
+     import {
+       projectSchema,
+       type ProjectFormData,
+     } from "../../schemas/projectSchema";
+
+     export function ProjectForm({ mode, project, onSuccess, onCancel }) {
+       const {
+         register,
+         handleSubmit,
+         formState: { errors },
+         control,
+       } = useForm<ProjectFormData>({
+         resolver: zodResolver(projectSchema),
+         defaultValues: {
+           /* ... */
+         },
+       });
+       // ... implementation
+     }
+     ```
+
+3. **Date Handling**:
+
+   - User input/display: `DD/MM/YYYY` format
+   - API payload: `YYYY-MM-DD` format (ISO)
+   - Use utilities from `src/lib/dateUtils.ts`:
+     - `formatDateToDDMMYYYY(isoDate)` - Convert ISO to display format
+     - `formatDateToISO(dateStr)` - Convert DD/MM/YYYY to ISO
+     - `isValidDate(dateStr)` - Validate DD/MM/YYYY format
+
+4. **Input Masking**:
+
+   - Use `IMaskInput` component with `Controller` from react-hook-form
+   - Date mask: `"00/00/0000"`
+   - CPF mask: `"000.000.000-00"`
+   - CNPJ mask: `"00.000.000/0000-00"`
+   - Example:
+     ```tsx
+     <Controller
+       name="date_begin"
+       control={control}
+       render={({ field }) => (
+         <IMaskInput
+           mask="00/00/0000"
+           value={field.value}
+           onAccept={(value: string) => field.onChange(value)}
+           // ... other props
+         />
+       )}
+     />
+     ```
+
+5. **Conditional Fields**:
+
+   - Use mode prop to conditionally render fields
+   - Example: Status selector only in edit mode, always "open" on create
+   - Pattern: `{mode === "edit" && <StatusField />}`
+
+6. **Error Handling**:
+
+   - Display field-level validation errors below inputs
+   - Show API errors in a banner at the top of the form
+   - Keep form open on error, reset and close on success
+
+7. **Styling**:
+   - Use Tailwind CSS classes with design tokens from `theme.css`
+   - Input classes: `w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-input-bg border border-input-border text-input-text`
+   - Button classes: Primary actions use `bg-primary hover:bg-primary-hover`, secondary use `bg-gray-100 hover:bg-gray-200`
+   - Error text: `text-xs text-red-600`
+
 ## Integration & Cross-Component Communication
 
 - **Auth**: JWT tokens managed in frontend context, sent via Axios headers.

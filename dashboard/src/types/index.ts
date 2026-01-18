@@ -47,6 +47,7 @@ export interface Project {
 export interface Event {
   id: number;
   name: string;
+  description?: string;
   date_begin: string;
   date_end: string;
   status: "open" | "close";

@@ -9,6 +9,7 @@ import { Calendar, Building2, Users, MapPin } from "lucide-react";
 import Badge from "../components/ui/Badge";
 import { useNavigate } from "react-router-dom";
 import { eventsService } from "../api/services";
+import { EventForm } from "../components/forms/EventForm";
 
 const EventsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,22 +24,22 @@ const EventsPage: React.FC = () => {
 
   // Fetch events
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await eventsService.getAll();
-        setEvents(response.data);
-      } catch (err) {
-        setError("Erro ao carregar eventos");
-        console.error("Error fetching events:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchEvents();
   }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await eventsService.getAll();
+      setEvents(response.data);
+    } catch (err) {
+      setError("Erro ao carregar eventos");
+      console.error("Error fetching events:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   React.useEffect(() => {
     setSuccessOpen(true);
@@ -54,6 +55,15 @@ const EventsPage: React.FC = () => {
 
   const handleEventClick = (event: Event) => {
     navigate(`/events/${event.id}`);
+  };
+
+  const handleFormSuccess = () => {
+    setModalOpen(false);
+    fetchEvents(); // Refresh the list
+  };
+
+  const handleFormCancel = () => {
+    setModalOpen(false);
   };
 
   return (
@@ -93,10 +103,13 @@ const EventsPage: React.FC = () => {
         open={modalOpen}
         onOpenChange={setModalOpen}
         title="Novo Evento"
-        description="Formulário de novo evento em breve."
+        description="Preencha as informações para criar um novo evento."
       >
-        {/* Future form goes here */}
-        <div className="text-sm text-gray-600">Formulário de novo evento.</div>
+        <EventForm
+          mode="create"
+          onSuccess={handleFormSuccess}
+          onCancel={handleFormCancel}
+        />
       </Modal>
 
       {/* Events List */}

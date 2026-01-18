@@ -17,6 +17,8 @@ import {
 import type { Event, CompanyWithEventData, Staff } from "../types";
 import { formatDate } from "../lib/dateUtils";
 import { useRecentlyVisited } from "../hooks/useRecentlyVisited";
+import { Modal } from "../components/ui/Modal";
+import { EventForm } from "../components/forms/EventForm";
 
 const EventDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +32,7 @@ const EventDetailsPage: React.FC = () => {
   const [staffs, setStaffs] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Fetch event details, companies, and staffs
   useEffect(() => {
@@ -75,8 +78,23 @@ const EventDetailsPage: React.FC = () => {
   }, [id]);
 
   const handleEdit = () => {
-    // Future: Open edit modal
-    console.log("Edit event", id);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = async () => {
+    setIsEditModalOpen(false);
+    // Refetch event data
+    if (!id) return;
+    try {
+      const eventResponse = await eventsService.getById(Number(id));
+      setEvent(eventResponse.data);
+    } catch (err) {
+      console.error("Error refetching event:", err);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
   };
 
   // Example data - to be calculated from EventStaff/EventCompany APIs
@@ -207,6 +225,20 @@ const EventDetailsPage: React.FC = () => {
         ]}
         defaultTab="Visão Geral"
       />
+
+      {/* Edit Event Modal */}
+      <Modal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        title="Editar Evento"
+      >
+        <EventForm
+          mode="edit"
+          event={event || undefined}
+          onSuccess={handleEditSuccess}
+          onCancel={handleEditCancel}
+        />
+      </Modal>
     </DetailsPageContainer>
   );
 };
