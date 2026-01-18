@@ -9,6 +9,7 @@ import { formatDate } from "../lib/dateUtils";
 import Badge from "../components/ui/Badge";
 import { useNavigate } from "react-router-dom";
 import { projectsService } from "../api/services";
+import { ProjectForm } from "../components/forms/ProjectForm";
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,22 +22,22 @@ const ProjectsPage: React.FC = () => {
 
   // Fetch projects
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await projectsService.getAll();
-        setProjects(response.data);
-      } catch (err) {
-        setError("Erro ao carregar projetos");
-        console.error("Error fetching projects:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProjects();
   }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await projectsService.getAll();
+      setProjects(response.data);
+    } catch (err) {
+      setError("Erro ao carregar projetos");
+      console.error("Error fetching projects:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Map UI filter to project status
   const filterMap: Record<string, string[]> = {
@@ -55,6 +56,15 @@ const ProjectsPage: React.FC = () => {
 
   const handleProjectClick = (project: Project) => {
     navigate(`/projects/${project.id}`);
+  };
+
+  const handleFormSuccess = () => {
+    setModalOpen(false);
+    fetchProjects(); // Refresh the list
+  };
+
+  const handleFormCancel = () => {
+    setModalOpen(false);
   };
 
   return (
@@ -86,63 +96,65 @@ const ProjectsPage: React.FC = () => {
         open={modalOpen}
         onOpenChange={setModalOpen}
         title="Novo Projeto"
-        description="Formulário de novo projeto em breve."
+        description="Preencha as informações para criar um novo projeto."
       >
-        {/* Future form goes here */}
-        <div className="text-sm text-gray-600">Formulário de novo projeto.</div>
+        <ProjectForm
+          mode="create"
+          onSuccess={handleFormSuccess}
+          onCancel={handleFormCancel}
+        />
       </Modal>
-      <div className="text-sm text-gray-600">
-        {/* Projects List */}
-        <ListCard
-          isLoading={loading}
-          filteredElements={filteredProjects}
-          notFoundIcon={
-            <Briefcase size={48} className="mx-auto text-slate-300 mb-4" />
-          }
-          notFoundMessage="Nenhum projeto encontrado"
-          onClick={handleProjectClick}
-        >
-          {(project) => {
-            const isActive = project.status === "open";
-            return (
-              <>
-                <ListCard.Icon active={isActive}>
-                  <Briefcase size={28} />
-                </ListCard.Icon>
 
-                {/* Content */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3
-                      className={`text-base font-semibold ${
-                        isActive ? "text-title" : "text-subtitle"
-                      }`}
-                    >
-                      {project.name}
-                    </h3>
-                    <Badge variant={project.status} />
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
-                    <span className="flex items-center gap-1">
-                      <Building2 size={14} />
-                      {`Empresa #${project.company_id}`}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      {formatDate(project.date_begin)} -{" "}
-                      {formatDate(project.date_end)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      {project.events_qnt ?? 0} eventos
-                    </span>
-                  </div>
+      {/* Projects List */}
+      <ListCard
+        isLoading={loading}
+        filteredElements={filteredProjects}
+        notFoundIcon={
+          <Briefcase size={48} className="mx-auto text-slate-300 mb-4" />
+        }
+        notFoundMessage="Nenhum projeto encontrado"
+        onClick={handleProjectClick}
+      >
+        {(project) => {
+          const isActive = project.status === "open";
+          return (
+            <>
+              <ListCard.Icon active={isActive}>
+                <Briefcase size={28} />
+              </ListCard.Icon>
+
+              {/* Content */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3
+                    className={`text-base font-semibold ${
+                      isActive ? "text-title" : "text-subtitle"
+                    }`}
+                  >
+                    {project.name}
+                  </h3>
+                  <Badge variant={project.status} />
                 </div>
-              </>
-            );
-          }}
-        </ListCard>
-      </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-subtitle">
+                  <span className="flex items-center gap-1">
+                    <Building2 size={14} />
+                    {`Empresa #${project.company_id}`}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar size={14} />
+                    {formatDate(project.date_begin)} -{" "}
+                    {formatDate(project.date_end)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar size={14} />
+                    {project.events_qnt ?? 0} eventos
+                  </span>
+                </div>
+              </div>
+            </>
+          );
+        }}
+      </ListCard>
     </PageContainer>
   );
 };

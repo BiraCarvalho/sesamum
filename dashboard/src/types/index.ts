@@ -37,6 +37,7 @@ export interface Project {
   id: number;
   name: string;
   status: "open" | "close";
+  description?: string;
   company_id: number;
   date_begin?: string;
   date_end?: string;

@@ -75,3 +75,27 @@ export const getEventStatus = (event: {
 
   return "Aberto";
 };
+
+// Form date conversion utilities
+export const formatDateToISO = (dateStr: string): string => {
+  // Convert DD/MM/YYYY to YYYY-MM-DD
+  const [day, month, year] = dateStr.split("/");
+  return `${year}-${month}-${day}`;
+};
+
+export const formatDateToDDMMYYYY = (isoDate: string): string => {
+  // Convert YYYY-MM-DD to DD/MM/YYYY
+  const [year, month, day] = isoDate.split("-");
+  return `${day}/${month}/${year}`;
+};
+
+export const isValidDate = (dateStr: string): boolean => {
+  if (!dateStr || dateStr.includes("_")) return false;
+  const [day, month, year] = dateStr.split("/");
+  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  return (
+    date.getFullYear() === parseInt(year) &&
+    date.getMonth() === parseInt(month) - 1 &&
+    date.getDate() === parseInt(day)
+  );
+};
