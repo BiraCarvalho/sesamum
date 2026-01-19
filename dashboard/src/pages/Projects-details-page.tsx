@@ -8,7 +8,7 @@ import {
 } from "../components/layout/DetailsPageLayout";
 import OverviewTab from "../components/tabs/project-details/OverviewTab";
 import EventsTab from "../components/tabs/EventsTab";
-import CompaniesTab from "../components/tabs/CompaniesTab";
+import CompaniesTab from "../components/tabs/event-details/CompaniesTab";
 import {
   projectsService,
   eventsService,
@@ -141,6 +141,19 @@ const ProjectDetailsPage: React.FC = () => {
     setIsEditModalOpen(false);
   };
 
+  const handleEventAdded = async () => {
+    // Refetch events after adding a new one
+    if (!id) return;
+    try {
+      const eventsResponse = await eventsService.getAll({
+        project_id: Number(id),
+      });
+      setEvents(eventsResponse.data);
+    } catch (err) {
+      console.error("Error refetching events:", err);
+    }
+  };
+
   if (loading) {
     return (
       <DetailsPageContainer>
@@ -222,11 +235,13 @@ const ProjectDetailsPage: React.FC = () => {
             title: "Eventos",
             content: (
               <EventsTab
+                projectId={Number(id)}
                 eventSearch={eventSearch}
                 setEventSearch={setEventSearch}
                 eventFilter={eventFilter}
                 setEventFilter={setEventFilter}
                 events={events}
+                onEventAdded={handleEventAdded}
               />
             ),
           },

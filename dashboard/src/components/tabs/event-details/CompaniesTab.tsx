@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import ListToolbar from "../shared/ListToolbar";
-import ListCard from "../shared/ListCard";
-import Badge from "../ui/Badge";
-import { Modal } from "../ui/Modal";
+import ListToolbar from "../../shared/ListToolbar";
+import ListCard from "../../shared/ListCard";
+import Badge from "../../ui/Badge";
+import { Modal } from "../../ui/Modal";
 import { User as UserIcon, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import AddExistingCompany from "./AddExistingCompany";
 
 interface Company {
   id: number;
@@ -15,19 +16,23 @@ interface Company {
 }
 
 interface CompaniesTabProps {
+  eventId?: number;
   companySearch: string;
   setCompanySearch: (value: string) => void;
   companyFilter: string;
   setCompanyFilter: (value: string) => void;
   companies: Company[];
+  onCompanyAdded?: () => void;
 }
 
 const CompaniesTab: React.FC<CompaniesTabProps> = ({
+  eventId,
   companySearch,
   setCompanySearch,
   companyFilter,
   setCompanyFilter,
   companies,
+  onCompanyAdded,
 }) => {
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
@@ -53,6 +58,17 @@ const CompaniesTab: React.FC<CompaniesTabProps> = ({
     navigate(`/companies/${company.id}`);
   };
 
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
+
+  const handleCompanySuccess = () => {
+    handleModalClose();
+    if (onCompanyAdded) {
+      onCompanyAdded();
+    }
+  };
+
   return (
     <div className="space-y-4">
       <ListToolbar
@@ -62,23 +78,11 @@ const CompaniesTab: React.FC<CompaniesTabProps> = ({
           { value: "production", label: "Produção" },
           { value: "service", label: "Serviço" },
         ]}
-        addLabel="Adicionar Empresa"
-        onAdd={() => setModalOpen(true)}
         searchValue={companySearch}
         onSearchChange={setCompanySearch}
         filterValue={companyFilter}
         onFilterChange={setCompanyFilter}
       />
-
-      <Modal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        title="Nova Empresa"
-        description="Formulário de nova empresa em breve."
-      >
-        {/* Future form goes here */}
-        <div className="text-sm text-gray-600">Formulário de nova empresa.</div>
-      </Modal>
 
       <ListCard
         filteredElements={filteredCompanies}

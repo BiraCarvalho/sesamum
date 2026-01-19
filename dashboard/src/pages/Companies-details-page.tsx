@@ -138,6 +138,7 @@ const CompaniesDetailsPage: React.FC = () => {
             title: "Eventos",
             content: (
               <EventsTab
+                addButton={false}
                 eventSearch={eventSearch}
                 setEventSearch={setEventSearch}
                 eventFilter={eventFilter}

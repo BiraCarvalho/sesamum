@@ -3,9 +3,18 @@ import ListToolbar from "../../shared/ListToolbar";
 import ListCard from "../../shared/ListCard";
 import { Modal } from "../../ui/Modal";
 import Badge from "../../ui/Badge";
-import { User as UserIcon, Building2, Clock } from "lucide-react";
+import {
+  User as UserIcon,
+  Building2,
+  Clock,
+  CloudUpload,
+  Plus,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatDateTime } from "../../../lib/dateUtils";
+import StaffCSVUpload from "./StaffCSVUpload";
+import AddExistingStaff from "./AddExistingStaff";
+import CreateAndAddStaff from "./CreateAndAddStaff";
 
 interface Staff {
   id: number;
@@ -26,23 +35,30 @@ interface Company {
 }
 
 interface StaffTabProps {
+  eventId: number;
   staffSearch: string;
   setStaffSearch: (value: string) => void;
   staffFilter: string;
   setStaffFilter: (value: string) => void;
   mockStaff: Staff[];
   companies: Company[];
+  onStaffAdded?: () => void;
 }
 
 const StaffTab: React.FC<StaffTabProps> = ({
+  eventId,
   staffSearch,
   setStaffSearch,
   staffFilter,
   setStaffFilter,
   mockStaff,
+  onStaffAdded,
 }) => {
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalView, setModalView] = useState<
+    "menu" | "csv" | "existing" | "new"
+  >("menu");
 
   // Build filter options dynamically from companies
   const filterOptions = [
@@ -68,6 +84,87 @@ const StaffTab: React.FC<StaffTabProps> = ({
     navigate(`/staffs/${staff.id}`);
   };
 
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setModalView("menu");
+  };
+
+  const handleCSVSuccess = () => {
+    handleModalClose();
+    if (onStaffAdded) {
+      onStaffAdded();
+    }
+  };
+
+  const getModalContent = () => {
+    switch (modalView) {
+      case "csv":
+        return (
+          <StaffCSVUpload
+            eventId={eventId}
+            onSuccess={handleCSVSuccess}
+            onCancel={handleModalClose}
+          />
+        );
+      case "existing":
+        return (
+          <AddExistingStaff
+            eventId={eventId}
+            onSuccess={handleCSVSuccess}
+            onCancel={handleModalClose}
+          />
+        );
+      case "new":
+        return (
+          <CreateAndAddStaff
+            eventId={eventId}
+            onSuccess={handleCSVSuccess}
+            onCancel={handleModalClose}
+          />
+        );
+      case "menu":
+      default:
+        return (
+          <div className="flex flex-col justify-center gap-4">
+            <button
+              className="flex items-center justify-center w-full gap-2 font-medium text-sm transition-colors px-4 py-2 bg-primary text-button-text rounded-lg shadow-sm hover:bg-button-bg-hover cursor-pointer"
+              onClick={() => setModalView("csv")}
+            >
+              <CloudUpload size={18} />
+              <span>Arquivo .csv</span>
+            </button>
+            <button
+              className="flex items-center justify-center w-full gap-2 font-medium text-sm transition-colors px-4 py-2 bg-primary text-button-text rounded-lg shadow-sm hover:bg-button-bg-hover cursor-pointer"
+              onClick={() => setModalView("existing")}
+            >
+              <UserIcon size={18} />
+              <span>Staff existente</span>
+            </button>
+            <button
+              className="flex items-center justify-center w-full gap-2 font-medium text-sm transition-colors px-4 py-2 bg-primary text-button-text rounded-lg shadow-sm hover:bg-button-bg-hover cursor-pointer"
+              onClick={() => setModalView("new")}
+            >
+              <Plus size={18} />
+              <span>Novo Staff</span>
+            </button>
+          </div>
+        );
+    }
+  };
+
+  const getModalTitle = () => {
+    switch (modalView) {
+      case "csv":
+        return "Importar Staff via CSV";
+      case "existing":
+        return "Adicionar Staff Existente";
+      case "new":
+        return "Criar Novo Staff";
+      default:
+        return "Adicionar Staff";
+    }
+  };
+
   return (
     <div className="space-y-4">
       <ListToolbar
@@ -83,12 +180,15 @@ const StaffTab: React.FC<StaffTabProps> = ({
 
       <Modal
         open={modalOpen}
-        onOpenChange={setModalOpen}
-        title="Novo Membro"
-        description="Formulário de novo membro em breve."
+        onOpenChange={handleModalClose}
+        title={getModalTitle()}
+        description={
+          modalView === "menu"
+            ? "Como você quer adicionar um novo staff?"
+            : undefined
+        }
       >
-        {/* Future form goes here */}
-        <div className="text-sm text-gray-600">Formulário de novo membro.</div>
+        {getModalContent()}
       </Modal>
 
       <ListCard

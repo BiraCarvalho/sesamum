@@ -5,6 +5,7 @@ import Badge from "../ui/Badge";
 import { Modal } from "../ui/Modal";
 import { Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { EventForm } from "../forms/EventForm";
 
 interface Event {
   id: number;
@@ -15,19 +16,25 @@ interface Event {
 }
 
 interface EventsTabProps {
+  addButton?: boolean;
+  projectId?: number;
   eventSearch: string;
   setEventSearch: (value: string) => void;
   eventFilter: string;
   setEventFilter: (value: string) => void;
   events: Event[];
+  onEventAdded?: () => void;
 }
 
 const EventsTab: React.FC<EventsTabProps> = ({
+  addButton,
+  projectId,
   eventSearch,
   setEventSearch,
   eventFilter,
   setEventFilter,
   events,
+  onEventAdded,
 }) => {
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
@@ -52,6 +59,17 @@ const EventsTab: React.FC<EventsTabProps> = ({
     navigate(`/events/${event.id}`);
   };
 
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
+
+  const handleEventSuccess = () => {
+    handleModalClose();
+    if (onEventAdded) {
+      onEventAdded();
+    }
+  };
+
   return (
     <div className="space-y-4">
       <ListToolbar
@@ -61,8 +79,10 @@ const EventsTab: React.FC<EventsTabProps> = ({
           { value: "open", label: "Ativos" },
           { value: "close", label: "Concluídos" },
         ]}
-        addLabel="Adicionar Evento"
-        onAdd={() => setModalOpen(true)}
+        {...(addButton && {
+          addLabel: "Adicionar Evento",
+          onAdd: () => setModalOpen(true),
+        })}
         searchValue={eventSearch}
         onSearchChange={setEventSearch}
         filterValue={eventFilter}
@@ -71,12 +91,20 @@ const EventsTab: React.FC<EventsTabProps> = ({
 
       <Modal
         open={modalOpen}
-        onOpenChange={setModalOpen}
+        onOpenChange={handleModalClose}
         title="Novo Evento"
-        description="Formulário de novo evento em breve."
+        description={
+          projectId
+            ? "Criar um novo evento para este projeto."
+            : "Criar um novo evento."
+        }
       >
-        {/* Future form goes here */}
-        <div className="text-sm text-gray-600">Formulário de novo evento.</div>
+        <EventForm
+          mode="create"
+          projectId={projectId}
+          onSuccess={handleEventSuccess}
+          onCancel={handleModalClose}
+        />
       </Modal>
 
       <ListCard

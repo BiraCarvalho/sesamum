@@ -8,7 +8,7 @@ import {
 } from "../components/layout/DetailsPageLayout";
 import OverviewTab from "../components/tabs/event-details/OverviewTab";
 import StaffTab from "../components/tabs/event-details/StaffTab";
-import CompaniesTab from "../components/tabs/CompaniesTab";
+import CompaniesTab from "../components/tabs/event-details/CompaniesTab";
 import {
   eventsService,
   companiesService,
@@ -95,6 +95,28 @@ const EventDetailsPage: React.FC = () => {
 
   const handleEditCancel = () => {
     setIsEditModalOpen(false);
+  };
+
+  const handleCompanyAdded = async () => {
+    // Refetch companies after adding a new one
+    if (!id) return;
+    try {
+      const companiesResponse = await companiesService.getByEvent(Number(id));
+      setCompanies(companiesResponse.data);
+    } catch (err) {
+      console.error("Error refetching companies:", err);
+    }
+  };
+
+  const handleStaffAdded = async () => {
+    // Refetch staffs after adding new ones
+    if (!id) return;
+    try {
+      const staffsResponse = await staffsService.getByEvent(Number(id));
+      setStaffs(staffsResponse.data);
+    } catch (err) {
+      console.error("Error refetching staffs:", err);
+    }
   };
 
   // Example data - to be calculated from EventStaff/EventCompany APIs
@@ -201,12 +223,14 @@ const EventDetailsPage: React.FC = () => {
             title: "Staffs",
             content: (
               <StaffTab
+                eventId={Number(id)}
                 staffSearch={staffSearch}
                 setStaffSearch={setStaffSearch}
                 staffFilter={staffFilter}
                 setStaffFilter={setStaffFilter}
                 mockStaff={staffs}
                 companies={companies}
+                onStaffAdded={handleStaffAdded}
               />
             ),
           },
@@ -214,11 +238,13 @@ const EventDetailsPage: React.FC = () => {
             title: "Empresas",
             content: (
               <CompaniesTab
+                eventId={Number(id)}
                 companySearch={companySearch}
                 setCompanySearch={setCompanySearch}
                 companyFilter={companyFilter}
                 setCompanyFilter={setCompanyFilter}
                 companies={companies}
+                onCompanyAdded={handleCompanyAdded}
               />
             ),
           },
