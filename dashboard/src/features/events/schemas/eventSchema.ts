@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatDateToISO, isValidDate } from "../lib/dateUtils";
+import { formatDateToISO, isValidDate } from "@/shared";
 
 export const eventSchema = z
   .object({
@@ -40,7 +40,7 @@ export const eventSchema = z
     {
       message: "Data de término deve ser posterior ou igual à data de início",
       path: ["date_end"],
-    }
+    },
   );
 
 export type EventFormData = z.infer<typeof eventSchema>;

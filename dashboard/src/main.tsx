@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./shared/index.ts";
 
 /**
  * Main Application Entry Point
@@ -41,6 +41,6 @@ enableMocking().then(() => {
       <AuthProvider>
         <App />
       </AuthProvider>
-    </StrictMode>
+    </StrictMode>,
   );
 });

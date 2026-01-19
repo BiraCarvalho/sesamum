@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   DetailsPageContainer,
-  PageHeader,
-  TabsContainer,
-  InformationsDetail,
+  DetailsPageHeader,
+  DetailsTabsContainer,
+  DetailsInfoSection,
 } from "@/shared/components/layout/DetailsPageLayout";
 import OverviewTab from "../components/tabs/OverviewTab";
 import StaffTab from "../components/tabs/StaffTab";
@@ -149,13 +149,13 @@ const EventDetailsPage: React.FC = () => {
 
   return (
     <DetailsPageContainer>
-      <PageHeader
+      <DetailsPageHeader
         title={event.name}
         subtitle={`Evento${event.type === "project" ? " de Projeto" : ""}`}
         onEdit={handleEdit}
       />
 
-      <InformationsDetail>
+      <DetailsInfoSection>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="text-sm font-medium text-text-subtitle">
@@ -204,9 +204,9 @@ const EventDetailsPage: React.FC = () => {
             </div>
           )}
         </div>
-      </InformationsDetail>
+      </DetailsInfoSection>
 
-      <TabsContainer
+      <DetailsTabsContainer
         tabs={[
           {
             title: "Visão Geral",

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatDateToISO, isValidDate } from "../lib/dateUtils";
+import { formatDateToISO, isValidDate } from "@/shared";
 
 export const projectSchema = z
   .object({
@@ -25,14 +25,14 @@ export const projectSchema = z
       .optional()
       .refine(
         (val) => !val || val === "" || isValidDate(val),
-        "Data inválida (use DD/MM/YYYY)"
+        "Data inválida (use DD/MM/YYYY)",
       ),
     date_end: z
       .string()
       .optional()
       .refine(
         (val) => !val || val === "" || isValidDate(val),
-        "Data inválida (use DD/MM/YYYY)"
+        "Data inválida (use DD/MM/YYYY)",
       ),
   })
   .refine(
@@ -47,7 +47,7 @@ export const projectSchema = z
     {
       message: "Data de término deve ser posterior à data de início",
       path: ["date_end"],
-    }
+    },
   );
 
 export type ProjectFormData = z.infer<typeof projectSchema>;

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   DetailsPageContainer,
-  PageHeader,
-  TabsContainer,
-  InformationsDetail,
+  DetailsPageHeader,
+  DetailsTabsContainer,
+  DetailsInfoSection,
 } from "@/shared/components/layout/DetailsPageLayout";
 import OverviewTab from "../components/tabs/OverviewTab";
 import EventsTab from "@/shared/components/tabs/EventsTab";
@@ -175,7 +175,11 @@ const ProjectDetailsPage: React.FC = () => {
 
   return (
     <DetailsPageContainer>
-      <PageHeader title={project.name} subtitle="Projeto" onEdit={handleEdit} />
+      <DetailsPageHeader
+        title={project.name}
+        subtitle="Projeto"
+        onEdit={handleEdit}
+      />
 
       <InformationsDetail>
         <div className="grid grid-cols-2 gap-6">

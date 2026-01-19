@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   DetailsPageContainer,
-  PageHeader,
-  TabsContainer,
-  InformationsDetail,
+  DetailsPageHeader,
+  DetailsTabsContainer,
+  DetailsInfoSection,
 } from "@/shared/components/layout/DetailsPageLayout";
 import EventsTab from "@/shared/components/tabs/EventsTab";
 import Badge from "@/shared/components/ui/Badge";
@@ -99,7 +99,11 @@ const CompaniesDetailsPage: React.FC = () => {
 
   return (
     <DetailsPageContainer>
-      <PageHeader title={company.name} subtitle="Empresa" onEdit={handleEdit} />
+      <DetailsPageHeader
+        title={company.name}
+        subtitle="Empresa"
+        onEdit={handleEdit}
+      />
 
       <Modal
         open={editModalOpen}
@@ -115,7 +119,7 @@ const CompaniesDetailsPage: React.FC = () => {
         />
       </Modal>
 
-      <InformationsDetail>
+      <DetailsInfoSection>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium text-text-subtitle">
@@ -132,9 +136,9 @@ const CompaniesDetailsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </InformationsDetail>
+      </DetailsInfoSection>
 
-      <TabsContainer
+      <DetailsTabsContainer
         tabs={[
           {
             title: "Eventos",

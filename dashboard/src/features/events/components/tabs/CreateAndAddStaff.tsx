@@ -102,7 +102,7 @@ const CreateAndAddStaff: React.FC<CreateAndAddStaffProps> = ({
       {/* Error message banner */}
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
-          <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
           <span>{error}</span>
         </div>
       )}

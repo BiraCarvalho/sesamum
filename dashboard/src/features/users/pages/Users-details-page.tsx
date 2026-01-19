@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   DetailsPageContainer,
-  PageHeader,
-  TabsContainer,
-  InformationsDetail,
+  DetailsPageHeader,
+  DetailsTabsContainer,
+  DetailsInfoSection,
 } from "@/shared/components/layout/DetailsPageLayout";
 import EventsTab from "@/shared/components/tabs/EventsTab";
 import AvatarComponent from "@/shared/components/ui/Avatar";
@@ -132,7 +132,7 @@ const UsersDetailsPage: React.FC = () => {
 
   return (
     <DetailsPageContainer>
-      <PageHeader
+      <DetailsPageHeader
         title={user.name}
         subtitle={getRoleLabel(user.role)}
         onEdit={handleEdit}
@@ -152,7 +152,7 @@ const UsersDetailsPage: React.FC = () => {
         />
       </Modal>
 
-      <InformationsDetail>
+      <DetailsInfoSection>
         <div className="flex items-start gap-6">
           <AvatarComponent alt={user.name} src={user.picture} size={128} />
 
@@ -179,9 +179,9 @@ const UsersDetailsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </InformationsDetail>
+      </DetailsInfoSection>
 
-      <TabsContainer
+      <DetailsTabsContainer
         tabs={[
           {
             title: "Eventos",

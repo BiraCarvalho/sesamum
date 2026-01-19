@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   DetailsPageContainer,
-  PageHeader,
-  TabsContainer,
-  InformationsDetail,
+  DetailsPageHeader,
+  DetailsTabsContainer,
+  DetailsInfoSection,
 } from "@/shared/components/layout/DetailsPageLayout";
 import EventsTab from "@/shared/components/tabs/EventsTab";
 import AvatarComponent from "@/shared/components/ui/Avatar";
@@ -110,7 +110,7 @@ const StaffsDetailsPage: React.FC = () => {
 
   return (
     <DetailsPageContainer>
-      <PageHeader
+      <DetailsPageHeader
         title={staff.name}
         subtitle={staff.email}
         onEdit={() => setEditModalOpen(true)}
@@ -130,7 +130,7 @@ const StaffsDetailsPage: React.FC = () => {
         />
       </Modal>
 
-      <InformationsDetail>
+      <DetailsInfoSection>
         <div className="flex items-center gap-6">
           <AvatarComponent alt={staff.name} size={128} />
 
@@ -166,9 +166,9 @@ const StaffsDetailsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </InformationsDetail>
+      </DetailsInfoSection>
 
-      <TabsContainer
+      <DetailsTabsContainer
         tabs={[
           {
             title: "Eventos",
