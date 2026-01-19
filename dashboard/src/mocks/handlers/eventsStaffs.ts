@@ -36,7 +36,7 @@ export const eventStaffsHandlers = [
     // Filter by staff_cpf - return events for this staff member
     if (staffCpfParam) {
       const staffEventRelations = filtered.filter(
-        (es) => es.staff_cpf === staffCpfParam
+        (es) => es.staff_cpf === staffCpfParam,
       );
 
       // Get the actual events for this staff member
@@ -55,7 +55,7 @@ export const eventStaffsHandlers = [
     if (eventIdParam) {
       const eventId = Number(eventIdParam);
       const eventStaffRelations = filtered.filter(
-        (es) => es.event_id === eventId
+        (es) => es.event_id === eventId,
       );
 
       // Get the actual staffs for this event
@@ -88,7 +88,7 @@ export const eventStaffsHandlers = [
     if (!relation) {
       return HttpResponse.json(
         { detail: "Event-Staff relationship not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -110,7 +110,7 @@ export const eventStaffsHandlers = [
     if (!newRelationData.staff_cpf || !newRelationData.event_id) {
       return HttpResponse.json(
         { detail: "staff_cpf and event_id are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -118,13 +118,13 @@ export const eventStaffsHandlers = [
     const exists = mockEventsStaffs.some(
       (es) =>
         es.staff_cpf === newRelationData.staff_cpf &&
-        es.event_id === newRelationData.event_id
+        es.event_id === newRelationData.event_id,
     );
 
     if (exists) {
       return HttpResponse.json(
         { detail: "Staff is already assigned to this event" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -154,7 +154,7 @@ export const eventStaffsHandlers = [
     if (index === -1) {
       return HttpResponse.json(
         { detail: "Event-Staff relationship not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -162,4 +162,85 @@ export const eventStaffsHandlers = [
 
     return new HttpResponse(null, { status: 204 });
   }),
+
+  // POST /api/v1/events/:eventId/staff/bulk - Bulk create event-staff relationships
+  http.post(
+    `${API_BASE_URL}/api/v1/events/:eventId/staff/bulk`,
+    async ({ request, params }) => {
+      await delay(1200);
+
+      const eventId = Number(params.eventId);
+      const requestData = (await request.json()) as {
+        staff: Array<{ cpf: string; name: string; email?: string }>;
+      };
+
+      // Validate event exists
+      const eventExists = mockEvents.some((e) => e.id === eventId);
+      if (!eventExists) {
+        return HttpResponse.json(
+          { detail: "Event not found" },
+          { status: 404 },
+        );
+      }
+
+      // Validate request
+      if (!requestData.staff || !Array.isArray(requestData.staff)) {
+        return HttpResponse.json(
+          { detail: "staff array is required" },
+          { status: 400 },
+        );
+      }
+
+      const results = {
+        created: [] as EventStaff[],
+        skipped: [] as Array<{ cpf: string; reason: string }>,
+      };
+
+      // Process each staff member
+      for (const staffData of requestData.staff) {
+        const cpf = staffData.cpf.replace(/\D/g, "");
+
+        // Check if staff already assigned to event
+        const alreadyAssigned = mockEventsStaffs.some(
+          (es) => es.staff_cpf === cpf && es.event_id === eventId,
+        );
+
+        if (alreadyAssigned) {
+          results.skipped.push({
+            cpf,
+            reason: "Already assigned to this event",
+          });
+          continue;
+        }
+
+        // Check if staff exists
+        const staffExists = mockStaffs.some((s) => s.cpf === cpf);
+
+        if (!staffExists) {
+          results.skipped.push({
+            cpf,
+            reason: "Staff not found in system",
+          });
+          continue;
+        }
+
+        // Create relationship
+        const newRelation: EventStaff = {
+          id: Math.max(...mockEventsStaffs.map((es) => es.id), 0) + 1,
+          staff_cpf: cpf,
+          event_id: eventId,
+        };
+
+        mockEventsStaffs.push(newRelation);
+        results.created.push(newRelation);
+      }
+
+      return HttpResponse.json(results, {
+        status: 201,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    },
+  ),
 ];

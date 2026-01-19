@@ -5,6 +5,8 @@ import { IMaskInput } from "react-imask";
 import { staffSchema, type StaffFormData } from "../../../schemas/staffSchema";
 import { useAuth } from "../../../context/AuthContext";
 import { AlertCircle } from "lucide-react";
+import { staffsService } from "../../../api/services/staffs";
+import { eventStaffService } from "../../../api/services/eventStaff";
 
 interface CreateAndAddStaffProps {
   eventId: number;
@@ -53,39 +55,20 @@ const CreateAndAddStaff: React.FC<CreateAndAddStaffProps> = ({
       }
 
       // Step 1: Create the staff member
-      // TODO: Replace with actual API call
-      // const createResponse = await staffsService.create({
-      //   name: data.name,
-      //   cpf: data.cpf.replace(/\D/g, ""), // Remove formatting
-      //   email: "",
-      //   company_id,
-      // });
-
-      console.log("Creating staff:", {
+      const createResponse = await staffsService.create({
         name: data.name,
-        cpf: data.cpf.replace(/\D/g, ""),
+        cpf: data.cpf.replace(/\D/g, ""), // Remove formatting
+        email: "",
         company_id,
       });
 
-      // Simulate API call for staff creation
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // Mock created staff ID
-      const createdStaffId = Math.floor(Math.random() * 1000);
+      const createdStaff = createResponse.data;
 
       // Step 2: Add the newly created staff to the event
-      // TODO: Replace with actual API call
-      // await api.post(`/events/${eventId}/staff`, {
-      //   staff_id: createdStaffId,
-      // });
-
-      console.log("Adding staff to event:", {
-        eventId,
-        staffId: createdStaffId,
+      await eventStaffService.create({
+        staff_cpf: createdStaff.cpf,
+        event_id: eventId,
       });
-
-      // Simulate API call for adding to event
-      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Success: call onSuccess callback
       onSuccess();
@@ -97,11 +80,13 @@ const CreateAndAddStaff: React.FC<CreateAndAddStaffProps> = ({
         setError("CPF já cadastrado no sistema");
       } else if (err.response?.status === 400) {
         setError(
-          err.response?.data?.message || "Dados inválidos. Verifique os campos."
+          err.response?.data?.message ||
+            "Dados inválidos. Verifique os campos.",
         );
       } else {
         setError(
-          err.response?.data?.message || "Erro ao criar staff. Tente novamente."
+          err.response?.data?.message ||
+            "Erro ao criar staff. Tente novamente.",
         );
       }
     } finally {

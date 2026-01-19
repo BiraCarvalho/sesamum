@@ -1,5 +1,5 @@
 import React from "react";
-import { Select } from "radix-ui";
+import * as Select from "@radix-ui/react-select";
 import { Search, Filter, Plus, ChevronDown } from "lucide-react";
 //import { ChevronDownIcon } from "@radix-ui/react-icons";
 

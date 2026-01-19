@@ -84,7 +84,7 @@ const ProjectDetailsPage: React.FC = () => {
           } catch (err) {
             console.error(
               `Error fetching companies for event ${event.id}:`,
-              err
+              err,
             );
           }
         }
@@ -106,7 +106,7 @@ const ProjectDetailsPage: React.FC = () => {
               console.error(`Error fetching staff for event ${event.id}:`, err);
               return { name: event.name, staffCount: 0 };
             }
-          })
+          }),
         );
         setEventsStaffMetrics(staffMetrics);
         setTotalStaff(staffMetrics.reduce((sum, e) => sum + e.staffCount, 0));
@@ -235,6 +235,7 @@ const ProjectDetailsPage: React.FC = () => {
             title: "Eventos",
             content: (
               <EventsTab
+                addButton={true}
                 projectId={Number(id)}
                 eventSearch={eventSearch}
                 setEventSearch={setEventSearch}

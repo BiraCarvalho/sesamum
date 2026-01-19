@@ -43,4 +43,14 @@ export const eventStaffService = {
   delete: async (id: number) => {
     return apiClient.delete(ENDPOINTS.EVENT_STAFF.DELETE(id));
   },
+
+  /**
+   * Bulk create event-staff relationships
+   */
+  createBulk: async (
+    eventId: number,
+    staff: Array<{ cpf: string; name: string; email?: string }>,
+  ) => {
+    return apiClient.post(ENDPOINTS.EVENT_STAFF.BULK(eventId), { staff });
+  },
 };

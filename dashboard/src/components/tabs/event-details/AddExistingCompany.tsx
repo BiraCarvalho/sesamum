@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Search, Building2, CheckCircle, AlertCircle } from "lucide-react";
+import { Search, Building2, AlertCircle } from "lucide-react";
 import type { Company } from "../../../types";
+import { companiesService } from "../../../api/services/companies";
+import { eventCompaniesService } from "../../../api/services/eventCompanies";
 
 interface AddExistingCompanyProps {
   eventId: number;
@@ -16,7 +18,7 @@ const AddExistingCompany: React.FC<AddExistingCompanyProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
-    null
+    null,
   );
 
   const [isLoading, setIsLoading] = useState(false);
@@ -29,40 +31,8 @@ const AddExistingCompany: React.FC<AddExistingCompanyProps> = ({
       setIsLoading(true);
       setError("");
       try {
-        // TODO: Replace with actual API call
-        // const response = await api.get(`/events/${eventId}/available-companies`);
-        // setAllCompanies(response.data);
-
-        // Mock data for demonstration
-        const mockCompanies: Company[] = [
-          {
-            id: 1,
-            name: "Empresa Produtora XYZ",
-            cnpj: "12.345.678/0001-90",
-            type: "production",
-          },
-          {
-            id: 2,
-            name: "Serviços ABC Ltda",
-            cnpj: "98.765.432/0001-10",
-            type: "service",
-          },
-          {
-            id: 3,
-            name: "Produtora Alpha",
-            cnpj: "11.222.333/0001-44",
-            type: "production",
-          },
-          {
-            id: 4,
-            name: "Beta Serviços",
-            cnpj: "55.666.777/0001-88",
-            type: "service",
-          },
-        ];
-
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        setAllCompanies(mockCompanies);
+        const response = await companiesService.getAll();
+        setAllCompanies(response.data);
       } catch (err) {
         setError("Erro ao carregar lista de empresas");
         console.error(err);
@@ -96,23 +66,21 @@ const AddExistingCompany: React.FC<AddExistingCompanyProps> = ({
     setError("");
 
     try {
-      // TODO: Replace with actual API call
-      // await api.post(`/events/${eventId}/companies`, {
-      //   company_id: selectedCompanyId,
-      //   role: companyRole,
-      // });
-
-      console.log("Adding company to event:", {
-        eventId,
-        companyId: selectedCompanyId,
+      await eventCompaniesService.create({
+        company_id: selectedCompanyId,
+        event_id: eventId,
+        role: "service", // Default role, can be made configurable
       });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       onSuccess();
-    } catch (err) {
-      setError("Erro ao adicionar empresa ao evento");
+    } catch (err: any) {
+      if (err.response?.status === 400) {
+        setError(
+          err.response?.data?.detail || "Empresa já adicionada ao evento",
+        );
+      } else {
+        setError("Erro ao adicionar empresa ao evento");
+      }
       console.error(err);
     } finally {
       setIsSubmitting(false);

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Upload, X, CheckCircle, AlertCircle, FileText } from "lucide-react";
+import { eventStaffService } from "../../../api/services/eventStaff";
 
 interface StaffCSVData {
   name: string;
@@ -50,7 +51,7 @@ const StaffCSVUpload: React.FC<StaffCSVUploadProps> = ({
 
     if (missingHeaders.length > 0) {
       setApiError(
-        `Colunas obrigatórias faltando: ${missingHeaders.join(", ")}`
+        `Colunas obrigatórias faltando: ${missingHeaders.join(", ")}`,
       );
       return;
     }
@@ -124,16 +125,12 @@ const StaffCSVUpload: React.FC<StaffCSVUploadProps> = ({
     setApiError("");
 
     try {
-      // TODO: Replace with actual API call
-      // await api.post(`/events/${eventId}/staff/bulk`, { staff: parsedData });
-      console.log("Submitting staff data:", parsedData);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
+      await eventStaffService.createBulk(eventId, parsedData);
       onSuccess();
-    } catch (error: unknown) {
-      if (error instanceof Error) {
+    } catch (error: any) {
+      if (error.response?.data?.detail) {
+        setApiError(error.response.data.detail);
+      } else if (error instanceof Error) {
         setApiError(error.message || "Erro ao importar staff");
       } else {
         setApiError("Erro ao importar staff");

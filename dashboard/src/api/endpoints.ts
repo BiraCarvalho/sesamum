@@ -90,6 +90,7 @@ export const ENDPOINTS = {
     DETAIL: (id: number) => `/api/v1/event-staff/${id}/`,
     CREATE: "/api/v1/event-staff/",
     DELETE: (id: number) => `/api/v1/event-staff/${id}/`,
+    BULK: (eventId: number) => `/api/v1/events/${eventId}/staff/bulk`,
   },
 
   // Event Users (Relationship)

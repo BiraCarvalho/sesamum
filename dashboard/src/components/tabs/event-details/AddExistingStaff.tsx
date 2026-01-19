@@ -7,6 +7,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import type { Staff } from "../../../types";
+import { staffsService } from "../../../api/services/staffs";
+import { eventStaffService } from "../../../api/services/eventStaff";
 
 interface AddExistingStaffProps {
   eventId: number;
@@ -22,7 +24,7 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [allStaff, setAllStaff] = useState<Staff[]>([]);
   const [selectedStaffIds, setSelectedStaffIds] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,40 +37,8 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
       setIsLoading(true);
       setError("");
       try {
-        // TODO: Replace with actual API call
-        // const response = await api.get(`/events/${eventId}/available-staff`);
-        // setAllStaff(response.data);
-
-        // Mock data for demonstration
-        const mockStaff: Staff[] = [
-          {
-            id: 1,
-            name: "João Silva",
-            cpf: "12345678901",
-            email: "joao@example.com",
-            company_id: 1,
-            created_at: "2024-01-15T10:00:00Z",
-          },
-          {
-            id: 2,
-            name: "Maria Santos",
-            cpf: "98765432109",
-            email: "maria@example.com",
-            company_id: 1,
-            created_at: "2024-01-16T10:00:00Z",
-          },
-          {
-            id: 3,
-            name: "Pedro Costa",
-            cpf: "11122233344",
-            email: "pedro@example.com",
-            company_id: 2,
-            created_at: "2024-01-17T10:00:00Z",
-          },
-        ];
-
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        setAllStaff(mockStaff);
+        const response = await staffsService.getAll();
+        setAllStaff(response.data);
       } catch (err) {
         setError("Erro ao carregar lista de staff");
         console.error(err);
@@ -120,22 +90,27 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
     setError("");
 
     try {
-      // TODO: Replace with actual API call
-      // await api.post(`/events/${eventId}/staff/add-existing`, {
-      //   staff_ids: Array.from(selectedStaffIds),
-      // });
+      // Get selected staff CPFs
+      const selectedStaff = allStaff.filter((s) => selectedStaffIds.has(s.id));
 
-      console.log("Adding staff to event:", {
-        eventId,
-        staffIds: Array.from(selectedStaffIds),
-      });
+      // Create event-staff relationships for each selected staff
+      const promises = selectedStaff.map((staff) =>
+        eventStaffService.create({
+          staff_cpf: staff.cpf,
+          event_id: eventId,
+        }),
+      );
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      await Promise.all(promises);
       onSuccess();
-    } catch (err) {
-      setError("Erro ao adicionar staff ao evento");
+    } catch (err: any) {
+      if (err.response?.status === 400) {
+        setError(
+          err.response?.data?.detail || "Alguns staff já estão no evento",
+        );
+      } else {
+        setError("Erro ao adicionar staff ao evento");
+      }
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -147,7 +122,7 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
     (id) => ({
       id,
       name: `Empresa ${id}`, // TODO: Replace with actual company names
-    })
+    }),
   );
 
   return (
