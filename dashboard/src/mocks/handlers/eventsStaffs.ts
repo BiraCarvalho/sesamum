@@ -1,8 +1,8 @@
 import { http, HttpResponse, delay } from "msw";
-import { mockEventsStaffs } from "../data/eventsStaffs";
+import { mockEventsStaffs, generateEventStaffId } from "../data/eventsStaffs";
 import { mockEvents } from "../data/events";
-import { mockStaffs } from "../data/staffs";
-import type { EventStaff } from "../../types";
+import { mockStaffs, sanitizeCPF } from "../data/staffs";
+import type { EventStaff } from "../../features/events/types";
 
 /**
  * EventStaffs MSW Handlers
@@ -82,7 +82,7 @@ export const eventStaffsHandlers = [
   http.get(`${API_BASE_URL}/api/v1/event-staff/:id/`, async ({ params }) => {
     await delay(400);
 
-    const relationId = Number(params.id);
+    const relationId = params.id as string; // Nano UUID
     const relation = mockEventsStaffs.find((es) => es.id === relationId);
 
     if (!relation) {
@@ -104,20 +104,33 @@ export const eventStaffsHandlers = [
   http.post(`${API_BASE_URL}/api/v1/event-staff/`, async ({ request }) => {
     await delay(800);
 
-    const newRelationData = (await request.json()) as Omit<EventStaff, "id">;
+    const newRelationData = (await request.json()) as Omit<
+      EventStaff,
+      "id" | "created_at"
+    >;
 
     // Validation
-    if (!newRelationData.staff_cpf || !newRelationData.event_id) {
+    if (
+      !newRelationData.staff_cpf ||
+      !newRelationData.event_id ||
+      !newRelationData.staff_id ||
+      !newRelationData.created_by
+    ) {
       return HttpResponse.json(
-        { detail: "staff_cpf and event_id are required" },
+        {
+          detail: "staff_cpf, staff_id, event_id, and created_by are required",
+        },
         { status: 400 },
       );
     }
 
+    // Sanitize CPF
+    const sanitizedCpf = sanitizeCPF(newRelationData.staff_cpf);
+
     // Check if relationship already exists
     const exists = mockEventsStaffs.some(
       (es) =>
-        es.staff_cpf === newRelationData.staff_cpf &&
+        es.staff_cpf === sanitizedCpf &&
         es.event_id === newRelationData.event_id,
     );
 
@@ -128,10 +141,13 @@ export const eventStaffsHandlers = [
       );
     }
 
-    // Create new relationship
+    // Create new relationship with Nano UUID
     const newRelation: EventStaff = {
-      id: Math.max(...mockEventsStaffs.map((es) => es.id), 0) + 1,
+      id: generateEventStaffId(),
       ...newRelationData,
+      staff_cpf: sanitizedCpf,
+      registration_check_id: null, // Not registered yet
+      created_at: new Date().toISOString(),
     };
 
     mockEventsStaffs.push(newRelation);
@@ -148,7 +164,7 @@ export const eventStaffsHandlers = [
   http.delete(`${API_BASE_URL}/api/v1/event-staff/:id/`, async ({ params }) => {
     await delay(600);
 
-    const relationId = Number(params.id);
+    const relationId = params.id as string; // Nano UUID
     const index = mockEventsStaffs.findIndex((es) => es.id === relationId);
 
     if (index === -1) {
@@ -198,7 +214,7 @@ export const eventStaffsHandlers = [
 
       // Process each staff member
       for (const staffData of requestData.staff) {
-        const cpf = staffData.cpf.replace(/\D/g, "");
+        const cpf = sanitizeCPF(staffData.cpf);
 
         // Check if staff already assigned to event
         const alreadyAssigned = mockEventsStaffs.some(
@@ -213,10 +229,10 @@ export const eventStaffsHandlers = [
           continue;
         }
 
-        // Check if staff exists
-        const staffExists = mockStaffs.some((s) => s.cpf === cpf);
+        // Check if staff exists and get staff_id
+        const staff = mockStaffs.find((s) => s.cpf === cpf);
 
-        if (!staffExists) {
+        if (!staff) {
           results.skipped.push({
             cpf,
             reason: "Staff not found in system",
@@ -224,11 +240,15 @@ export const eventStaffsHandlers = [
           continue;
         }
 
-        // Create relationship
+        // Create relationship with Nano UUID and new schema
         const newRelation: EventStaff = {
-          id: Math.max(...mockEventsStaffs.map((es) => es.id), 0) + 1,
+          id: generateEventStaffId(),
+          staff_id: staff.id,
           staff_cpf: cpf,
           event_id: eventId,
+          registration_check_id: null,
+          created_at: new Date().toISOString(),
+          created_by: 1, // Default to admin for bulk operations
         };
 
         mockEventsStaffs.push(newRelation);

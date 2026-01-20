@@ -7,6 +7,9 @@ import { userHandlers } from "./handlers/users";
 import { eventUsersHandlers } from "./handlers/eventsUsers";
 import { eventStaffsHandlers } from "./handlers/eventsStaffs";
 import { eventCompaniesHandlers } from "./handlers/eventsCompanies";
+import { authHandlers } from "./handlers/auth";
+import { checkHandlers } from "./handlers/checks";
+import { userInvitesHandlers } from "./handlers/userInvites";
 
 /**
  * MSW Handlers Index
@@ -14,14 +17,16 @@ import { eventCompaniesHandlers } from "./handlers/eventsCompanies";
  * This file exports all MSW request handlers for the application.
  * Handlers are organized by domain (dashboard, events, etc.).
  *
- * As new domains are implemented, import and add their handlers here.
- *
- * Future handlers to add:
- * - authHandlers (login, refresh, logout)
- * - checkHandlers (check-in/out operations)
+ * ✅ All handlers now implemented and API-compliant:
+ * - Auth: Google OAuth login/register with real JWT
+ * - Checks: Registration, check-in, check-out with validation
+ * - User Invites: Slot-based registration system
  */
 
 export const handlers = [
+  ...authHandlers,
+  ...checkHandlers,
+  ...userInvitesHandlers,
   ...dashboardHandlers,
   ...eventHandlers,
   ...companyHandlers,

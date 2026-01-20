@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import { mockStaffs } from "../data/staffs";
+import { mockStaffs, sanitizeCPF } from "../data/staffs";
 import type { Staff } from "../../types";
 
 /**
@@ -44,7 +44,7 @@ export const staffHandlers = [
         (s) =>
           s.name.toLowerCase().includes(searchLower) ||
           s.cpf.includes(search) ||
-          s.email.toLowerCase().includes(searchLower)
+          s.email.toLowerCase().includes(searchLower),
       );
     }
 
@@ -85,15 +85,18 @@ export const staffHandlers = [
     if (!newStaffData.name || !newStaffData.cpf || !newStaffData.company_id) {
       return HttpResponse.json(
         { detail: "Name, CPF, and company_id are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
+    // Sanitize CPF (remove formatting)
+    const sanitizedCpf = sanitizeCPF(newStaffData.cpf);
+
     // Check for duplicate CPF
-    if (mockStaffs.some((s) => s.cpf === newStaffData.cpf)) {
+    if (mockStaffs.some((s) => s.cpf === sanitizedCpf)) {
       return HttpResponse.json(
         { detail: "CPF already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -101,6 +104,7 @@ export const staffHandlers = [
     const newStaff: Staff = {
       id: Math.max(...mockStaffs.map((s) => s.id), 0) + 1,
       ...newStaffData,
+      cpf: sanitizedCpf,
       created_at: new Date().toISOString(),
     };
 
@@ -126,7 +130,7 @@ export const staffHandlers = [
       if (index === -1) {
         return HttpResponse.json(
           { detail: "Staff not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -136,23 +140,25 @@ export const staffHandlers = [
       if (!updateData.name || !updateData.cpf || !updateData.company_id) {
         return HttpResponse.json(
           { detail: "Name, CPF, and company_id are required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
+      // Sanitize CPF
+      const sanitizedCpf = sanitizeCPF(updateData.cpf);
+
       // Check for duplicate CPF (excluding current staff)
-      if (
-        mockStaffs.some((s) => s.cpf === updateData.cpf && s.id !== staffId)
-      ) {
+      if (mockStaffs.some((s) => s.cpf === sanitizedCpf && s.id !== staffId)) {
         return HttpResponse.json(
           { detail: "CPF already exists" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const updatedStaff: Staff = {
         id: staffId,
         ...updateData,
+        cpf: sanitizedCpf,
       };
 
       mockStaffs[index] = updatedStaff;
@@ -163,7 +169,7 @@ export const staffHandlers = [
           "Content-Type": "application/json",
         },
       });
-    }
+    },
   ),
 
   // PATCH /api/v1/staffs/:id/ - Partial update staff
@@ -178,11 +184,16 @@ export const staffHandlers = [
       if (index === -1) {
         return HttpResponse.json(
           { detail: "Staff not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
       const patchData = (await request.json()) as Partial<Omit<Staff, "id">>;
+
+      // Sanitize CPF if updating
+      if (patchData.cpf) {
+        patchData.cpf = sanitizeCPF(patchData.cpf);
+      }
 
       // Check for duplicate CPF if updating cpf
       if (
@@ -191,7 +202,7 @@ export const staffHandlers = [
       ) {
         return HttpResponse.json(
           { detail: "CPF already exists" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -208,7 +219,7 @@ export const staffHandlers = [
           "Content-Type": "application/json",
         },
       });
-    }
+    },
   ),
 
   // DELETE /api/v1/staffs/:id/ - Delete staff

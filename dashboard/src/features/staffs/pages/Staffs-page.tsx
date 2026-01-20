@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { staffsService } from "../api/staffs.service";
 import { formatDateTime } from "@/shared/lib/dateUtils";
 import { StaffForm } from "../components/StaffForm";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 // Mock company names (in production, this would come from API)
 const COMPANY_NAMES: Record<number, string> = {
@@ -31,32 +32,33 @@ const StaffsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch staffs
-  useEffect(() => {
-    const fetchStaffs = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await staffsService.getAll();
-        setStaffs(response.data);
-      } catch (err) {
-        setError("Erro ao carregar staffs");
-        console.error("Error fetching staffs:", err);
-      } finally {
-        setLoading(false);
+  // Debounce search input
+  const debouncedSearch = useDebounce(staffSearch, 500);
+
+  // Fetch staffs with server-side filtering
+  const fetchStaffs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const params: { company_id?: number; search?: string } = {};
+
+      if (debouncedSearch) {
+        params.search = debouncedSearch;
       }
-    };
 
+      const response = await staffsService.getAll(params);
+      setStaffs(response.data);
+    } catch (err) {
+      setError("Erro ao carregar staffs");
+      console.error("Error fetching staffs:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchStaffs();
-  }, []);
-
-  // Map UI filter to company_id (simplified - filter on client side)
-  const filteredStaff = staffs.filter((staff) => {
-    const matchesSearch =
-      staff.name.toLowerCase().includes(staffSearch.toLowerCase()) ||
-      staff.cpf.toLowerCase().includes(staffSearch.toLowerCase());
-    return matchesSearch;
-  });
+  }, [debouncedSearch]);
 
   const handleStaffClick = (staff: Staff) => {
     navigate(`/staffs/${staff.id}`);
@@ -65,12 +67,7 @@ const StaffsPage: React.FC = () => {
   const handleFormSuccess = async () => {
     setModalOpen(false);
     // Reload staffs list
-    try {
-      const response = await staffsService.getAll();
-      setStaffs(response.data);
-    } catch (err) {
-      console.error("Error reloading staffs:", err);
-    }
+    fetchStaffs();
   };
 
   return (
@@ -110,7 +107,7 @@ const StaffsPage: React.FC = () => {
       {/* Staff List */}
       <ListCard
         isLoading={loading}
-        filteredElements={filteredStaff}
+        filteredElements={staffs}
         notFoundIcon={
           <UserIcon size={48} className="mx-auto text-slate-300 mb-4" />
         }

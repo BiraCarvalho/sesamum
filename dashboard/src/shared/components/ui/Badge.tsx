@@ -51,6 +51,14 @@ const variants = {
     style: "bg-badge-pending-bg text-badge-pending-text",
     label: "Pendente",
   },
+  expired: {
+    style: "bg-badge-expired-bg text-badge-expired-text",
+    label: "Expirado",
+  },
+  used: {
+    style: "bg-badge-closed-bg text-badge-closed-text",
+    label: "Usado",
+  },
 };
 
 interface BadgeProps {

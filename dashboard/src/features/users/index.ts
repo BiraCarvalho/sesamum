@@ -7,6 +7,8 @@ export { UserForm } from "./components/UserForm";
 
 // API
 export { usersService } from "./api/users.service";
+export { userInvitesService } from "./api/userInvites.service";
 
 // Types
 export type { User } from "./types";
+export type { UserInvite } from "@/shared/types";

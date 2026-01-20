@@ -16,10 +16,11 @@ export const userSchema = z.object({
   role: z.enum(["admin", "company", "control"], {
     message: "Selecione uma função válida",
   }),
-  company_id: z.number({
-    required_error: "Selecione uma empresa",
-    invalid_type_error: "Selecione uma empresa válida",
-  }),
+  company_id: z
+    .number({
+      message: "Selecione uma empresa válida",
+    })
+    .positive("Selecione uma empresa"),
 });
 
 export type UserFormData = z.infer<typeof userSchema>;

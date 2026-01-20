@@ -1,267 +1,163 @@
-import {
-  useState,
-  useRef,
-  useEffect,
-  type KeyboardEvent,
-  forwardRef,
-  type ComponentPropsWithoutRef,
-  useCallback,
-} from "react";
-import Input from "./Input";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import * as Popover from "@radix-ui/react-popover";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 
-interface AutocompleteOption {
-  value: string;
-  label: string;
-}
-
-interface AutocompleteProps extends Omit<
-  ComponentPropsWithoutRef<"input">,
-  "onChange" | "onSelect"
-> {
-  id: string;
-  label?: string;
-  error?: any;
-  options: AutocompleteOption[];
-  onChange: (value: string) => void;
-  onSelect?: (option: AutocompleteOption) => void;
+export interface AutocompleteProps<T> {
+  options: T[];
+  value?: string | number;
+  onChange: (value: string | number) => void;
+  getOptionLabel: (option: T) => string;
+  getOptionValue: (option: T) => string | number;
   placeholder?: string;
-  noResultsText?: string;
-  minChars?: number;
+  error?: string;
+  disabled?: boolean;
+  className?: string;
+  // Server-side filtering props
+  onSearch?: (searchTerm: string) => void | Promise<void>;
   isLoading?: boolean;
-  loadingText?: string;
-  serverFilter?: boolean;
   debounceMs?: number;
-  onInputChange?: (value: string) => void;
+  minSearchLength?: number;
 }
 
-export const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
-  (
-    {
-      id,
-      label,
-      error,
-      options,
-      onChange,
-      onSelect,
-      placeholder = "Digite para buscar...",
-      noResultsText = "Nenhum resultado encontrado",
-      minChars = 0,
-      isLoading = false,
-      loadingText = "Carregando...",
-      serverFilter = false,
-      debounceMs = 300,
-      onInputChange,
-      className,
-      ...props
-    },
-    ref,
-  ) => {
-    const [inputValue, setInputValue] = useState("");
-    const [isOpen, setIsOpen] = useState(false);
-    const [highlightedIndex, setHighlightedIndex] = useState(-1);
-    const [filteredOptions, setFilteredOptions] = useState<
-      AutocompleteOption[]
-    >([]);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const inputContainerRef = useRef<HTMLDivElement>(null);
-    const debounceTimerRef = useRef<number | null>(null);
-    const lastSelectedValueRef = useRef<string | null>(null);
+export function Autocomplete<T>({
+  options,
+  value,
+  onChange,
+  getOptionLabel,
+  getOptionValue,
+  placeholder = "Pesquisar...",
+  error,
+  disabled = false,
+  className = "",
+  onSearch,
+  isLoading = false,
+  debounceMs = 300,
+  minSearchLength = 0,
+}: AutocompleteProps<T>) {
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-    // Debounced input change handler for server filter
-    const debouncedInputChange = useCallback(
-      (value: string) => {
-        if (debounceTimerRef.current) {
-          clearTimeout(debounceTimerRef.current);
-        }
+  // Find the selected option to display its label
+  const selectedOption = options.find(
+    (option) => getOptionValue(option) === value,
+  );
+  const displayValue = selectedOption ? getOptionLabel(selectedOption) : "";
 
-        debounceTimerRef.current = setTimeout(() => {
-          onInputChange?.(value);
-        }, debounceMs);
-      },
-      [debounceMs, onInputChange],
+  // Debounce search term for server-side filtering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, debounceMs);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, debounceMs]);
+
+  // Trigger server-side search when debounced term changes
+  useEffect(() => {
+    if (onSearch && debouncedSearchTerm.length >= minSearchLength) {
+      onSearch(debouncedSearchTerm);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, minSearchLength]);
+
+  // Client-side filtering (only when onSearch is not provided)
+  const filteredOptions = useMemo(() => {
+    if (onSearch) return options; // Server-side filtering, show all returned options
+    if (!searchTerm) return options;
+    return options.filter((option) =>
+      getOptionLabel(option).toLowerCase().includes(searchTerm.toLowerCase()),
     );
+  }, [options, searchTerm, getOptionLabel, onSearch]);
 
-    // Filter options based on input (client-side) or use provided options (server-side)
-    useEffect(() => {
-      // Don't open dropdown if the current value is the last selected value
-      if (lastSelectedValueRef.current === inputValue) {
-        return;
-      }
+  const handleSelect = useCallback(
+    (option: T) => {
+      onChange(getOptionValue(option));
+      setSearchTerm("");
+      setOpen(false);
+    },
+    [onChange, getOptionValue],
+  );
 
-      if (serverFilter) {
-        // For server filter, use options as provided by parent
-        setFilteredOptions(options);
-        setIsOpen(
-          inputValue.length > 0 &&
-            inputValue.length >= minChars &&
-            (options.length > 0 || isLoading),
-        );
-      } else {
-        // Client-side filtering
-        if (inputValue.length > 0 && inputValue.length >= minChars) {
-          const filtered = options.filter((option) =>
-            option.label.toLowerCase().includes(inputValue.toLowerCase()),
-          );
-          setFilteredOptions(filtered);
-          setIsOpen(filtered.length > 0);
-        } else {
-          setFilteredOptions([]);
-          setIsOpen(false);
-        }
-      }
-      setHighlightedIndex(-1);
-    }, [inputValue, options, minChars, serverFilter, isLoading]);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    if (!open) setOpen(true);
+  };
 
-    // Cleanup debounce timer
-    useEffect(() => {
-      return () => {
-        if (debounceTimerRef.current) {
-          clearTimeout(debounceTimerRef.current);
-        }
-      };
-    }, []);
+  const showNoResults =
+    !isLoading &&
+    filteredOptions.length === 0 &&
+    searchTerm.length >= minSearchLength;
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          dropdownRef.current &&
-          !dropdownRef.current.contains(event.target as Node) &&
-          inputContainerRef.current &&
-          !inputContainerRef.current.contains(event.target as Node)
-        ) {
-          setIsOpen(false);
-        }
-      };
-
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setInputValue(value);
-      onChange(value);
-
-      // Clear last selected value when input changes
-      if (lastSelectedValueRef.current !== null) {
-        lastSelectedValueRef.current = null;
-      }
-
-      // For server filter, trigger debounced callback
-      if (serverFilter) {
-        debouncedInputChange(value);
-      }
-    };
-
-    const handleOptionClick = (option: AutocompleteOption) => {
-      setInputValue(option.label);
-      onChange(option.value);
-      onSelect?.(option);
-      setIsOpen(false);
-      setHighlightedIndex(-1);
-      // Store the selected value to prevent reopening
-      lastSelectedValueRef.current = option.label;
-    };
-
-    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-      if (!isOpen) return;
-
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          setHighlightedIndex((prev) =>
-            prev < filteredOptions.length - 1 ? prev + 1 : prev,
-          );
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-          break;
-        case "Enter":
-          e.preventDefault();
-          if (
-            highlightedIndex >= 0 &&
-            highlightedIndex < filteredOptions.length
-          ) {
-            handleOptionClick(filteredOptions[highlightedIndex]);
-          }
-          break;
-        case "Escape":
-          setIsOpen(false);
-          setHighlightedIndex(-1);
-          break;
-      }
-    };
-
-    // Scroll highlighted item into view
-    useEffect(() => {
-      if (highlightedIndex >= 0 && dropdownRef.current) {
-        const highlightedElement =
-          dropdownRef.current.children[highlightedIndex];
-        if (highlightedElement) {
-          highlightedElement.scrollIntoView({
-            block: "nearest",
-            behavior: "smooth",
-          });
-        }
-      }
-    }, [highlightedIndex]);
-
-    return (
-      <div className="relative" ref={inputContainerRef}>
-        <Input
-          ref={ref}
-          id={id}
-          label={label}
-          error={error}
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className={className}
-          {...props}
-        />
-        {isOpen && (
-          <div
-            ref={dropdownRef}
-            className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-          >
+  return (
+    <div className={className}>
+      <Popover.Root open={open} onOpenChange={setOpen}>
+        <Popover.Anchor asChild>
+          <div className="relative">
+            <input
+              className={`w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-input-bg border text-input-text ${
+                error ? "border-red-500" : "border-input-border"
+              } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+              placeholder={placeholder}
+              value={open ? searchTerm : displayValue}
+              onChange={handleInputChange}
+              onFocus={() => !disabled && setOpen(true)}
+              disabled={disabled}
+            />
             {isLoading ? (
-              <div className="px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin" />
-                {loadingText}
-              </div>
-            ) : filteredOptions.length > 0 ? (
-              filteredOptions.map((option, index) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleOptionClick(option)}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                    index === highlightedIndex
-                      ? "bg-primary text-white"
-                      : "hover:bg-gray-100 text-gray-900"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))
+              <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin" />
             ) : (
-              inputValue.length >= minChars && (
-                <div className="px-4 py-3 text-sm text-gray-500">
-                  {noResultsText}
-                </div>
-              )
+              <ChevronsUpDown className="absolute right-3 top-3 h-4 w-4 opacity-50 pointer-events-none" />
             )}
           </div>
-        )}
-      </div>
-    );
-  },
-);
+        </Popover.Anchor>
 
-Autocomplete.displayName = "Autocomplete";
+        <Popover.Portal>
+          <Popover.Content
+            className="z-50 w(--radix-popover-trigger-width) overflow-hidden rounded-md border border-slate-200 bg-white text-slate-950 shadow-md animate-in fade-in-0 zoom-in-95"
+            sideOffset={5}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <div className="max-h-75 overflow-y-auto p-1">
+              {isLoading ? (
+                <div className="py-6 text-center text-sm text-slate-500">
+                  <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+                  Carregando...
+                </div>
+              ) : showNoResults ? (
+                <div className="py-6 text-center text-sm text-slate-500">
+                  Nenhum resultado encontrado.
+                </div>
+              ) : searchTerm.length < minSearchLength && onSearch ? (
+                <div className="py-6 text-center text-sm text-slate-500">
+                  Digite ao menos {minSearchLength} caracteres para buscar.
+                </div>
+              ) : (
+                filteredOptions.map((option) => {
+                  const optionValue = getOptionValue(option);
+                  const optionLabel = getOptionLabel(option);
+                  const isSelected = optionValue === value;
+
+                  return (
+                    <button
+                      key={String(optionValue)}
+                      type="button"
+                      className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100 focus:bg-slate-100"
+                      onClick={() => handleSelect(option)}
+                    >
+                      <span>{optionLabel}</span>
+                      {isSelected && <Check className="ml-auto h-4 w-4" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+    </div>
+  );
+}
 
 export default Autocomplete;

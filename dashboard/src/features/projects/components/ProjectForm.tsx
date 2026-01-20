@@ -3,6 +3,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
 import { companiesService } from "@/features/companies/api/companies.service";
+import { Autocomplete } from "@/shared/components/ui/Autocomplete";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 import { projectsService } from "../api/projects.service";
 import type { Project } from "../types";
 import type { Company } from "@/features/companies/types";
@@ -23,9 +25,11 @@ export function ProjectForm({
   onCancel,
 }: ProjectFormProps) {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [companySearch, setCompanySearch] = useState("");
+  const debouncedCompanySearch = useDebounce(companySearch, 300);
 
   const {
     register,
@@ -47,23 +51,50 @@ export function ProjectForm({
     },
   });
 
-  // Fetch companies on mount
+  // Fetch companies with server-side filtering
   useEffect(() => {
     const fetchCompanies = async () => {
+      // Only fetch if there's a search term
+      if (!debouncedCompanySearch || debouncedCompanySearch.length < 2) {
+        setCompanies([]);
+        return;
+      }
+
       try {
         setIsLoadingCompanies(true);
-        const response = await companiesService.getAll();
+        const response = await companiesService.getAll({
+          search: debouncedCompanySearch,
+        });
         setCompanies(response.data);
       } catch (err) {
         console.error("Erro ao carregar empresas:", err);
-        setError("Erro ao carregar lista de empresas");
       } finally {
         setIsLoadingCompanies(false);
       }
     };
 
     fetchCompanies();
-  }, []);
+  }, [debouncedCompanySearch]);
+
+  // Load initial company if in edit mode
+  useEffect(() => {
+    if (mode === "edit" && project?.company_id) {
+      const fetchInitialCompany = async () => {
+        try {
+          const response = await companiesService.getAll();
+          const initialCompany = response.data.find(
+            (c) => c.id === project.company_id,
+          );
+          if (initialCompany) {
+            setCompanies([initialCompany]);
+          }
+        } catch (err) {
+          console.error("Erro ao carregar empresa inicial:", err);
+        }
+      };
+      fetchInitialCompany();
+    }
+  }, [mode, project?.company_id]);
 
   const onSubmit = async (data: ProjectFormData) => {
     try {
@@ -184,37 +215,34 @@ export function ProjectForm({
         </div>
       )}
 
-      {
-        /* Company select */
-        <div>
-          <label
-            htmlFor="company_id"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Empresa
-          </label>
-          <select
-            id="company_id"
-            {...register("company_id", { valueAsNumber: true })}
-            className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-input-bg border border-input-border text-input-text"
-            disabled={isSubmitting || isLoadingCompanies}
-          >
-            <option value="">
-              {isLoadingCompanies ? "Carregando..." : "Selecione uma empresa"}
-            </option>
-            {companies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
-            ))}
-          </select>
-          {errors.company_id && (
-            <p className="mt-1 text-xs text-red-600">
-              {errors.company_id.message}
-            </p>
+      {/* Company autocomplete */}
+      <div>
+        <label
+          htmlFor="company_id"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Empresa
+        </label>
+        <Controller
+          name="company_id"
+          control={control}
+          render={({ field, fieldState }) => (
+            <Autocomplete
+              options={companies}
+              value={field.value}
+              onChange={field.onChange}
+              getOptionLabel={(company) => company.name}
+              getOptionValue={(company) => company.id}
+              placeholder="Digite para buscar empresas..."
+              error={fieldState.error?.message}
+              onSearch={(searchTerm) => setCompanySearch(searchTerm)}
+              isLoading={isLoadingCompanies}
+              minSearchLength={2}
+              disabled={isSubmitting}
+            />
           )}
-        </div>
-      }
+        />
+      </div>
       {/* Date begin input (optional) */}
       <div>
         <label

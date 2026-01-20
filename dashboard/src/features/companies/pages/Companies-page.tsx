@@ -11,6 +11,7 @@ import { Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { companiesService } from "../api/companies.service";
 import { CompanyForm } from "../components/CompanyForm";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 const CompaniesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,12 +22,24 @@ const CompaniesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch companies
+  // Debounce search input
+  const debouncedSearch = useDebounce(search, 500);
+
+  // Fetch companies with server-side filtering
   const fetchCompanies = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await companiesService.getAll();
+      const params: { type?: string; search?: string } = {};
+
+      if (filter && filter !== "all") {
+        params.type = filter;
+      }
+      if (debouncedSearch) {
+        params.search = debouncedSearch;
+      }
+
+      const response = await companiesService.getAll(params);
       setCompanies(response.data);
     } catch (err) {
       setError("Erro ao carregar empresas");
@@ -38,7 +51,7 @@ const CompaniesPage: React.FC = () => {
 
   useEffect(() => {
     fetchCompanies();
-  }, []);
+  }, [debouncedSearch, filter]);
 
   const handleFormSuccess = () => {
     setModalOpen(false);
@@ -48,13 +61,6 @@ const CompaniesPage: React.FC = () => {
   const handleFormCancel = () => {
     setModalOpen(false);
   };
-
-  const filteredCompanies = companies.filter((company) => {
-    const matchesSearch =
-      company.name.toLowerCase().includes(search.toLowerCase()) ||
-      company.cnpj.includes(search);
-    return matchesSearch;
-  });
 
   const handleCompanyClick = (company: Company) => {
     navigate(`/companies/${company.id}`);
@@ -97,7 +103,7 @@ const CompaniesPage: React.FC = () => {
       {/* Companies List */}
       <ListCard
         isLoading={loading}
-        filteredElements={filteredCompanies}
+        filteredElements={companies}
         notFoundIcon={
           <Building2 size={48} className="mx-auto text-slate-300 mb-4" />
         }

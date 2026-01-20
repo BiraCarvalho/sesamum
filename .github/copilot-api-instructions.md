@@ -54,10 +54,16 @@ Representa um "Slot" aberto pelo Admin para uma empresa receber um novo usuário
 - **company_id** (FK -> `company`): A empresa para a qual o usuário será vinculado.
 - **email**: EmailField (Opcional - se preenchido, restringe o slot a este email específico).
 - **role**: String/Enum (`company`, `control`) - A role que o novo usuário terá.
-- **status**: String/Enum (`pending`, `used`, `expired`) - Default: `pending`.
+- **used_by**: FK -> `users` (Nullable) - Referência ao usuário criado através deste convite. Null = convite não utilizado.
 - **created_at**: DateTime
 - **expires_at**: DateTime (Obrigatório).
 - **created_by**: FK -> `users` (Admin).
+
+_Nota: O campo `status` é computado dinamicamente pelo servidor:_
+
+- _`pending`: `used_by` é null E `expires_at` > data atual_
+- _`used`: `used_by` não é null_
+- _`expired`: `used_by` é null E `expires_at` <= data atual_
 
 #### `staffs`
 

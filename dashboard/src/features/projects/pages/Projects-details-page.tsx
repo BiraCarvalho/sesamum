@@ -181,7 +181,7 @@ const ProjectDetailsPage: React.FC = () => {
         onEdit={handleEdit}
       />
 
-      <InformationsDetail>
+      <DetailsInfoSection>
         <div className="grid grid-cols-2 gap-6">
           <div>
             <label className="text-sm font-medium text-text-subtitle">
@@ -218,9 +218,9 @@ const ProjectDetailsPage: React.FC = () => {
             </div>
           )}
         </div>
-      </InformationsDetail>
+      </DetailsInfoSection>
 
-      <TabsContainer
+      <DetailsTabsContainer
         tabs={[
           {
             title: "Visão Geral",

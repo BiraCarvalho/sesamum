@@ -15,6 +15,8 @@ export const ENDPOINTS = {
   // Authentication
   AUTH: {
     LOGIN: "/api/v1/auth/login/",
+    GOOGLE_LOGIN: "/api/v1/auth/google/login/",
+    GOOGLE_REGISTER: "/api/v1/auth/google/register/",
     REFRESH: "/api/v1/auth/refresh/",
     LOGOUT: "/api/v1/auth/logout/",
   },
@@ -68,6 +70,14 @@ export const ENDPOINTS = {
     CREATE: "/api/v1/users/",
     UPDATE: (id: number) => `/api/v1/users/${id}/`,
     DELETE: (id: number) => `/api/v1/users/${id}/`,
+  },
+
+  // User Invites
+  USER_INVITES: {
+    LIST: "/api/v1/user-invites/",
+    DETAIL: (id: string) => `/api/v1/user-invites/${id}/`,
+    CREATE: "/api/v1/user-invites/",
+    DELETE: (id: string) => `/api/v1/user-invites/${id}/`,
   },
 
   // Checks (Check-in/out)

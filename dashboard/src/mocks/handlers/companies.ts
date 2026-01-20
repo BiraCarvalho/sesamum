@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import { mockCompanies } from "../data/companies";
+import { mockCompanies, sanitizeCNPJ } from "../data/companies";
 import type { Company } from "../../types";
 
 /**
@@ -42,7 +42,7 @@ export const companyHandlers = [
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(
         (c) =>
-          c.name.toLowerCase().includes(searchLower) || c.cnpj.includes(search)
+          c.name.toLowerCase().includes(searchLower) || c.cnpj.includes(search),
       );
     }
 
@@ -64,7 +64,7 @@ export const companyHandlers = [
     if (!company) {
       return HttpResponse.json(
         { detail: "Company not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -86,15 +86,18 @@ export const companyHandlers = [
     if (!newCompanyData.name || !newCompanyData.cnpj) {
       return HttpResponse.json(
         { detail: "Name and CNPJ are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
+    // Sanitize CNPJ (remove formatting)
+    const sanitizedCnpj = sanitizeCNPJ(newCompanyData.cnpj);
+
     // Check for duplicate CNPJ
-    if (mockCompanies.some((c) => c.cnpj === newCompanyData.cnpj)) {
+    if (mockCompanies.some((c) => c.cnpj === sanitizedCnpj)) {
       return HttpResponse.json(
         { detail: "CNPJ already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -102,6 +105,7 @@ export const companyHandlers = [
     const newCompany: Company = {
       id: Math.max(...mockCompanies.map((c) => c.id), 0) + 1,
       ...newCompanyData,
+      cnpj: sanitizedCnpj,
     };
 
     mockCompanies.push(newCompany);
@@ -126,7 +130,7 @@ export const companyHandlers = [
       if (index === -1) {
         return HttpResponse.json(
           { detail: "Company not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -136,25 +140,29 @@ export const companyHandlers = [
       if (!updateData.name || !updateData.cnpj) {
         return HttpResponse.json(
           { detail: "Name and CNPJ are required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
+
+      // Sanitize CNPJ
+      const sanitizedCnpj = sanitizeCNPJ(updateData.cnpj);
 
       // Check for duplicate CNPJ (excluding current company)
       if (
         mockCompanies.some(
-          (c) => c.cnpj === updateData.cnpj && c.id !== companyId
+          (c) => c.cnpj === sanitizedCnpj && c.id !== companyId,
         )
       ) {
         return HttpResponse.json(
           { detail: "CNPJ already exists" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const updatedCompany: Company = {
         id: companyId,
         ...updateData,
+        cnpj: sanitizedCnpj,
       };
 
       mockCompanies[index] = updatedCompany;
@@ -165,7 +173,7 @@ export const companyHandlers = [
           "Content-Type": "application/json",
         },
       });
-    }
+    },
   ),
 
   // PATCH /api/v1/companies/:id/ - Partial update company
@@ -180,22 +188,27 @@ export const companyHandlers = [
       if (index === -1) {
         return HttpResponse.json(
           { detail: "Company not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
       const patchData = (await request.json()) as Partial<Omit<Company, "id">>;
 
+      // Sanitize CNPJ if updating
+      if (patchData.cnpj) {
+        patchData.cnpj = sanitizeCNPJ(patchData.cnpj);
+      }
+
       // Check for duplicate CNPJ if updating cnpj
       if (
         patchData.cnpj &&
         mockCompanies.some(
-          (c) => c.cnpj === patchData.cnpj && c.id !== companyId
+          (c) => c.cnpj === patchData.cnpj && c.id !== companyId,
         )
       ) {
         return HttpResponse.json(
           { detail: "CNPJ already exists" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -212,7 +225,7 @@ export const companyHandlers = [
           "Content-Type": "application/json",
         },
       });
-    }
+    },
   ),
 
   // DELETE /api/v1/companies/:id/ - Delete company
@@ -225,7 +238,7 @@ export const companyHandlers = [
     if (index === -1) {
       return HttpResponse.json(
         { detail: "Company not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 

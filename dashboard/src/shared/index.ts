@@ -36,6 +36,7 @@ export { AuthProvider, useAuth } from "./context/AuthContext";
 // Hooks
 export { useRealTimeData } from "./hooks/useRealTimeData";
 export { useRecentlyVisited } from "./hooks/useRecentlyVisited";
+export { useDebounce } from "./hooks/useDebounce";
 
 // Lib
 export {

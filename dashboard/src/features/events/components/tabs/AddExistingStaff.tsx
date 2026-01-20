@@ -9,6 +9,7 @@ import {
 import type { Staff } from "@/features/staffs/types";
 import { staffsService } from "@/features/staffs/api/staffs.service";
 import { eventStaffService } from "../../api/eventStaff.service";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 interface AddExistingStaffProps {
   eventId: number;
@@ -31,13 +32,23 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
   const [error, setError] = useState<string>("");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
 
-  // Fetch all available staff
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Fetch staff with server-side filtering
   useEffect(() => {
     const fetchStaff = async () => {
       setIsLoading(true);
       setError("");
       try {
-        const response = await staffsService.getAll();
+        const params: { search?: string; company_id?: number } = {};
+        if (debouncedSearchTerm) {
+          params.search = debouncedSearchTerm;
+        }
+        if (companyFilter !== "all") {
+          params.company_id = Number(companyFilter);
+        }
+        const response = await staffsService.getAll(params);
         setAllStaff(response.data);
       } catch (err) {
         setError("Erro ao carregar lista de staff");
@@ -48,19 +59,7 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
     };
 
     fetchStaff();
-  }, [eventId]);
-
-  const filteredStaff = allStaff.filter((staff) => {
-    const matchesSearch =
-      staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.cpf.includes(searchTerm) ||
-      staff.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesCompany =
-      companyFilter === "all" || staff.company_id.toString() === companyFilter;
-
-    return matchesSearch && matchesCompany;
-  });
+  }, [debouncedSearchTerm, companyFilter]);
 
   const handleToggleStaff = (staffId: number) => {
     const newSelected = new Set(selectedStaffIds);
@@ -73,10 +72,10 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
   };
 
   const handleSelectAll = () => {
-    if (selectedStaffIds.size === filteredStaff.length) {
+    if (selectedStaffIds.size === allStaff.length) {
       setSelectedStaffIds(new Set());
     } else {
-      setSelectedStaffIds(new Set(filteredStaff.map((s) => s.id)));
+      setSelectedStaffIds(new Set(allStaff.map((s) => s.id)));
     }
   };
 
@@ -164,12 +163,12 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
       </div>
 
       {/* Select All Checkbox */}
-      {filteredStaff.length > 0 && (
+      {allStaff.length > 0 && (
         <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
           <input
             type="checkbox"
             id="select-all"
-            checked={selectedStaffIds.size === filteredStaff.length}
+            checked={selectedStaffIds.size === allStaff.length}
             onChange={handleSelectAll}
             className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
           />
@@ -177,7 +176,7 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
             htmlFor="select-all"
             className="text-sm font-medium cursor-pointer"
           >
-            Selecionar todos ({filteredStaff.length})
+            Selecionar todos ({allStaff.length})
           </label>
           {selectedStaffIds.size > 0 && (
             <span className="ml-auto text-sm text-primary font-medium">
@@ -193,7 +192,7 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
           <div className="p-8 text-center text-gray-500">
             Carregando staff disponível...
           </div>
-        ) : filteredStaff.length === 0 ? (
+        ) : allStaff.length === 0 ? (
           <div className="p-8 text-center">
             <User size={48} className="mx-auto text-slate-300 mb-3" />
             <p className="text-gray-500 text-sm">
@@ -204,7 +203,7 @@ const AddExistingStaff: React.FC<AddExistingStaffProps> = ({
           </div>
         ) : (
           <div className="divide-y divide-input-border">
-            {filteredStaff.map((staff) => {
+            {allStaff.map((staff) => {
               const isSelected = selectedStaffIds.has(staff.id);
               return (
                 <label

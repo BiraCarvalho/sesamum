@@ -62,6 +62,15 @@ export let mockProjects: Project[] = [
     date_end: "2025-10-22T23:59:59Z",
     events_qnt: 20,
   },
+  {
+    id: 7,
+    name: "Semana da Inovação",
+    status: "pending",
+    company_id: 2,
+    date_begin: "2026-05-10T00:00:00Z",
+    date_end: "2026-05-17T23:59:59Z",
+    events_qnt: 0,
+  },
 ];
 
 /**
@@ -123,6 +132,15 @@ export const resetMockProjects = () => {
       date_begin: "2025-10-15T00:00:00Z",
       date_end: "2025-10-22T23:59:59Z",
       events_qnt: 20,
+    },
+    {
+      id: 7,
+      name: "Semana da Inovação",
+      status: "pending",
+      company_id: 2,
+      date_begin: "2026-05-10T00:00:00Z",
+      date_end: "2026-05-17T23:59:59Z",
+      events_qnt: 0,
     },
   ];
 };

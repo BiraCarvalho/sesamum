@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usersService } from "../api/users.service";
 import { companiesService } from "@/features/companies/api/companies.service";
+import { Autocomplete } from "@/shared/components/ui/Autocomplete";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 import type { User } from "../types";
 import type { Company } from "@/features/companies/types";
 import { userSchema, type UserFormData } from "../schemas/userSchema";
@@ -18,13 +20,16 @@ export function UserForm({ mode, user, onSuccess, onCancel }: UserFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [companySearch, setCompanySearch] = useState("");
+  const debouncedCompanySearch = useDebounce(companySearch, 300);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -35,23 +40,50 @@ export function UserForm({ mode, user, onSuccess, onCancel }: UserFormProps) {
     },
   });
 
-  // Fetch companies for dropdown
+  // Fetch companies with server-side filtering
   useEffect(() => {
     const fetchCompanies = async () => {
+      // Only fetch if there's a search term
+      if (!debouncedCompanySearch || debouncedCompanySearch.length < 2) {
+        setCompanies([]);
+        return;
+      }
+
       try {
         setLoadingCompanies(true);
-        const response = await companiesService.getAll();
+        const response = await companiesService.getAll({
+          search: debouncedCompanySearch,
+        });
         setCompanies(response.data);
       } catch (err) {
         console.error("Error fetching companies:", err);
-        setError("Erro ao carregar lista de empresas");
       } finally {
         setLoadingCompanies(false);
       }
     };
 
     fetchCompanies();
-  }, []);
+  }, [debouncedCompanySearch]);
+
+  // Load initial company if in edit mode
+  useEffect(() => {
+    if (mode === "edit" && user?.company_id) {
+      const fetchInitialCompany = async () => {
+        try {
+          const response = await companiesService.getAll();
+          const initialCompany = response.data.find(
+            (c) => c.id === user.company_id,
+          );
+          if (initialCompany) {
+            setCompanies([initialCompany]);
+          }
+        } catch (err) {
+          console.error("Erro ao carregar empresa inicial:", err);
+        }
+      };
+      fetchInitialCompany();
+    }
+  }, [mode, user?.company_id]);
 
   const onSubmit = async (data: UserFormData) => {
     try {
@@ -164,7 +196,7 @@ export function UserForm({ mode, user, onSuccess, onCancel }: UserFormProps) {
         )}
       </div>
 
-      {/* Company select */}
+      {/* Company autocomplete */}
       <div>
         <label
           htmlFor="company_id"
@@ -172,24 +204,25 @@ export function UserForm({ mode, user, onSuccess, onCancel }: UserFormProps) {
         >
           Empresa
         </label>
-        <select
-          id="company_id"
-          {...register("company_id", { valueAsNumber: true })}
-          className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-input-bg border border-input-border text-input-text"
-          disabled={isSubmitting || loadingCompanies}
-        >
-          <option value="">Selecione uma empresa</option>
-          {companies.map((company) => (
-            <option key={company.id} value={company.id}>
-              {company.name}
-            </option>
-          ))}
-        </select>
-        {errors.company_id && (
-          <p className="mt-1 text-xs text-red-600">
-            {errors.company_id.message}
-          </p>
-        )}
+        <Controller
+          name="company_id"
+          control={control}
+          render={({ field, fieldState }) => (
+            <Autocomplete
+              options={companies}
+              value={field.value}
+              onChange={field.onChange}
+              getOptionLabel={(company) => company.name}
+              getOptionValue={(company) => company.id}
+              placeholder="Digite para buscar empresas..."
+              error={fieldState.error?.message}
+              onSearch={(searchTerm) => setCompanySearch(searchTerm)}
+              isLoading={loadingCompanies}
+              minSearchLength={2}
+              disabled={isSubmitting}
+            />
+          )}
+        />
       </div>
 
       {/* Action buttons */}

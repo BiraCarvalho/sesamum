@@ -3,6 +3,7 @@ import { Search, Building2, AlertCircle } from "lucide-react";
 import type { Company } from "@/features/companies/types";
 import { companiesService } from "@/features/companies/api/companies.service";
 import { eventCompaniesService } from "../../api/eventCompanies.service";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 interface AddExistingCompanyProps {
   eventId: number;
@@ -25,13 +26,20 @@ const AddExistingCompany: React.FC<AddExistingCompanyProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>("");
 
-  // Fetch all available companies
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Fetch companies with server-side filtering
   useEffect(() => {
     const fetchCompanies = async () => {
       setIsLoading(true);
       setError("");
       try {
-        const response = await companiesService.getAll();
+        const params: { search?: string } = {};
+        if (debouncedSearchTerm) {
+          params.search = debouncedSearchTerm;
+        }
+        const response = await companiesService.getAll(params);
         setAllCompanies(response.data);
       } catch (err) {
         setError("Erro ao carregar lista de empresas");
@@ -42,15 +50,7 @@ const AddExistingCompany: React.FC<AddExistingCompanyProps> = ({
     };
 
     fetchCompanies();
-  }, [eventId]);
-
-  const filteredCompanies = allCompanies.filter((company) => {
-    const matchesSearch =
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.cnpj.includes(searchTerm);
-
-    return matchesSearch;
-  });
+  }, [debouncedSearchTerm]);
 
   const handleSelectCompany = (companyId: number) => {
     setSelectedCompanyId(companyId);
@@ -117,7 +117,7 @@ const AddExistingCompany: React.FC<AddExistingCompanyProps> = ({
           <div className="p-8 text-center text-gray-500">
             Carregando empresas disponíveis...
           </div>
-        ) : filteredCompanies.length === 0 ? (
+        ) : allCompanies.length === 0 ? (
           <div className="p-8 text-center">
             <Building2 size={48} className="mx-auto text-slate-300 mb-3" />
             <p className="text-gray-500 text-sm">
@@ -128,7 +128,7 @@ const AddExistingCompany: React.FC<AddExistingCompanyProps> = ({
           </div>
         ) : (
           <div className="divide-y divide-input-border">
-            {filteredCompanies.map((company) => {
+            {allCompanies.map((company) => {
               const isSelected = selectedCompanyId === company.id;
               return (
                 <label

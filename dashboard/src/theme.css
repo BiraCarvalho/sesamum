@@ -67,12 +67,14 @@
   --color-badge-service-text: var(--color-toast-success-text);
   --color-badge-credentialed-bg: var(--color-toast-warning-bg);
   --color-badge-credentialed-text: var(--color-toast-warning-text);
-  --color-badge-pending-bg: var(--color-badge-default-bg);
-  --color-badge-pending-text: var(--color-badge-default-text);
+  --color-badge-pending-bg: var(--color-badge-credentialed-bg);
+  --color-badge-pending-text: var(--color-badge-credentialed-text);
   --color-badge-checked-in-bg: var(--color-toast-success-bg);
   --color-badge-checked-in-text: var(--color-toast-success-text);
   --color-badge-checked-out-bg: var(--color-toast-error-bg);
   --color-badge-checked-out-text: var(--color-toast-error-text);
+  --color-badge-expired-bg: var(--color-badge-closed-bg);
+  --color-badge-expired-text: var(--color-badge-closed-text);
 
   /* Cores tipos */
   --color-event-bg: var(--color-primary);

@@ -111,7 +111,7 @@ const ProjectsPage: React.FC = () => {
       {/* Projects List */}
       <ListCard
         isLoading={loading}
-        filteredElements={filteredProjects}
+        filteredElements={projects}
         notFoundIcon={
           <Briefcase size={48} className="mx-auto text-slate-300 mb-4" />
         }

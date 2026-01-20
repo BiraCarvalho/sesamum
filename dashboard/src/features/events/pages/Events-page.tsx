@@ -13,6 +13,7 @@ import Badge from "@/shared/components/ui/Badge";
 import { useNavigate } from "react-router-dom";
 import { eventsService } from "../api/events.service";
 import { EventForm } from "../components/EventForm";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 const EventsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,16 +26,22 @@ const EventsPage: React.FC = () => {
   // Toast states
   const [successOpen, setSuccessOpen] = useState(false);
 
-  // Fetch events
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+  // Debounce search input
+  const debouncedSearch = useDebounce(search, 500);
 
+  // Fetch events with server-side filtering
   const fetchEvents = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await eventsService.getAll();
+      const params: { status?: string; project_id?: number } = {};
+
+      if (filter && filter !== "all") {
+        params.status = filter;
+      }
+      // Note: Events API doesn't have search param yet, but prepared for future
+
+      const response = await eventsService.getAll(params);
       setEvents(response.data);
     } catch (err) {
       setError("Erro ao carregar eventos");
@@ -44,16 +51,20 @@ const EventsPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    fetchEvents();
+  }, [filter]);
+
   React.useEffect(() => {
     setSuccessOpen(true);
   }, []);
 
+  // Client-side search for events (since API doesn't support search yet)
   const filteredEvents = events.filter((event) => {
-    const matchesSearch = event.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesFilter = filter === "all" || event.status === filter;
-    return matchesSearch && matchesFilter;
+    const matchesSearch = debouncedSearch
+      ? event.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+      : true;
+    return matchesSearch;
   });
 
   const handleEventClick = (event: Event) => {

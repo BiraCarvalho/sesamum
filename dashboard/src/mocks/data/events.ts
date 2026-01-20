@@ -74,6 +74,17 @@ export let mockEvents: Event[] = [
     location: "Teatro Municipal",
     staffs_qnt: 22,
   },
+  {
+    id: 7,
+    name: "Palestra Motivacional",
+    date_begin: "2026-02-05T09:00:00Z",
+    date_end: "2026-02-05T12:00:00Z",
+    status: "pending",
+    project_id: 2,
+    type: "event",
+    location: "Auditório Central",
+    staffs_qnt: 10,
+  },
 ];
 
 /**
@@ -146,6 +157,17 @@ export const resetMockEvents = () => {
       type: "project",
       location: "Teatro Municipal",
       staffs_qnt: 22,
+    },
+    {
+      id: 7,
+      name: "Palestra Motivacional",
+      date_begin: "2026-02-05T09:00:00Z",
+      date_end: "2026-02-05T12:00:00Z",
+      status: "pending",
+      project_id: 2,
+      type: "event",
+      location: "Auditório Central",
+      staffs_qnt: 10,
     },
   ];
 };
