@@ -17,6 +17,8 @@ export { default as Card } from "./components/ui/Card";
 export { default as CardHeader } from "./components/ui/Card";
 export { default as CardTitle } from "./components/ui/Card";
 export { default as CardContent } from "./components/ui/Card";
+export { default as Input } from "./components/ui/Input";
+export { default as Autocomplete } from "./components/ui/Autocomplete";
 export { Modal } from "./components/ui/Modal";
 export { Toast } from "./components/ui/Toast";
 

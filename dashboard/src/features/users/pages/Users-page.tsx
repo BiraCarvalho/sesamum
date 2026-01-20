@@ -8,16 +8,19 @@ import ListCard from "@/shared/components/list/ListCard";
 import Badge from "@/shared/components/ui/Badge";
 import { type User } from "../types/index";
 import { Modal } from "@/shared/components/ui/Modal";
-import { Building2, User as UserIcon, Shield, Eye } from "lucide-react";
+import { Building2, User as UserIcon, Mail, Shield, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usersService } from "../api/users.service";
 import { UserForm } from "../components/UserForm";
+import UserInviteForm from "../components/UserInviteForm";
+import { set } from "zod";
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalView, setModalView] = useState<"menu" | "new" | "invite">("menu");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +64,16 @@ const UsersPage: React.FC = () => {
     navigate(`/users/${user.id}`);
   };
 
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setModalView("menu");
+  };
+
+  const handleModalCancel = (open: boolean) => {
+    if (!open) {
+      handleModalClose();
+    }
+  };
   const handleFormSuccess = async () => {
     setModalOpen(false);
     // Refresh users list
@@ -75,6 +88,56 @@ const UsersPage: React.FC = () => {
     }
   };
 
+  const getModalContent = () => {
+    switch (modalView) {
+      case "new":
+        return (
+          <UserForm
+            onSuccess={handleFormSuccess}
+            onCancel={handleModalClose}
+            mode="create"
+          />
+        );
+      case "invite":
+        return <UserInviteForm />;
+      case "menu":
+      default:
+        return (
+          <div className="flex flex-col justify-center gap-4">
+            <button
+              className="flex items-center justify-center w-full gap-2 font-medium text-sm transition-colors px-4 py-2 bg-primary text-button-text rounded-lg shadow-sm hover:bg-button-bg-hover cursor-pointer"
+              onClick={() => setModalView("new")}
+            >
+              <UserIcon size={18} />
+              <span>Criar usuário</span>
+            </button>
+            <button
+              className="flex items-center justify-center w-full gap-2 font-medium text-sm transition-colors px-4 py-2 bg-primary text-button-text rounded-lg shadow-sm hover:bg-button-bg-hover cursor-pointer"
+              onClick={() => setModalView("invite")}
+            >
+              <Mail size={18} />
+              <span>Criar convite</span>
+            </button>
+          </div>
+        );
+    }
+  };
+
+  const ModalText = {
+    menu: {
+      label: "Novo Usuário",
+      description: "Como você deseja criar um novo usuário.",
+    },
+    new: {
+      label: "Criar Usuário",
+      description: "Informe todos os dados para criar um novo usuário.",
+    },
+    invite: {
+      label: "Criar Convite",
+      description:
+        "Crie um convite com duração de 48h para um novo usuário de uma empresa.",
+    },
+  };
   return (
     <PageContainer>
       <PageHeader title="Usuários" subtitle="Gerencie usuários do sistema." />
@@ -103,15 +166,11 @@ const UsersPage: React.FC = () => {
 
       <Modal
         open={modalOpen}
-        onOpenChange={setModalOpen}
-        title="Novo Usuário"
-        description="Preencha os dados para criar um novo usuário."
+        onOpenChange={handleModalCancel}
+        title={ModalText[modalView].label}
+        description={ModalText[modalView].description}
       >
-        <UserForm
-          mode="create"
-          onSuccess={handleFormSuccess}
-          onCancel={() => setModalOpen(false)}
-        />
+        {getModalContent()}
       </Modal>
 
       {/* Users List */}
