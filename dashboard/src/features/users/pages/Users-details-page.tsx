@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   DetailsPageContainer,
   DetailsPageHeader,
@@ -15,6 +15,9 @@ import type { User } from "../types";
 import type { Event } from "@/features/events/types";
 import { useRecentlyVisited } from "@/shared/hooks/useRecentlyVisited";
 import { UserForm } from "../components/UserForm";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { Toast } from "@/shared/components/ui/Toast";
+import { useAuth } from "@/shared/context/AuthContext";
 
 // Mock company names (should come from companies API in production)
 const COMPANY_NAMES: Record<number, string> = {
@@ -28,7 +31,9 @@ const COMPANY_NAMES: Record<number, string> = {
 
 const UsersDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { addRecentVisit } = useRecentlyVisited();
+  const { user: currentUser } = useAuth();
   const [eventSearch, setEventSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -36,6 +41,17 @@ const UsersDetailsPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{
+    open: boolean;
+    type: "success" | "error";
+    message: string;
+  }>({
+    open: false,
+    type: "success",
+    message: "",
+  });
 
   // Fetch user details and their events
   useEffect(() => {
@@ -100,6 +116,47 @@ const UsersDetailsPage: React.FC = () => {
     }
   };
 
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!id) return;
+
+    try {
+      setDeleting(true);
+      await usersService.delete(Number(id));
+
+      setToast({
+        open: true,
+        type: "success",
+        message: "Usuário excluído com sucesso",
+      });
+
+      setTimeout(() => {
+        navigate("/users");
+      }, 1500);
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Erro ao excluir usuário";
+
+      setToast({
+        open: true,
+        type: "error",
+        message: errorMessage,
+      });
+      setShowDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+  };
+
   if (loading) {
     return (
       <DetailsPageContainer>
@@ -130,12 +187,16 @@ const UsersDetailsPage: React.FC = () => {
     return roleLabels[role as keyof typeof roleLabels] || role;
   };
 
+  // Check if user can delete (only admin role)
+  const canDelete = currentUser?.role === "admin";
+
   return (
     <DetailsPageContainer>
       <DetailsPageHeader
         title={user.name}
         subtitle={getRoleLabel(user.role)}
         onEdit={handleEdit}
+        onDelete={canDelete ? handleDelete : undefined}
       />
 
       <Modal
@@ -198,6 +259,28 @@ const UsersDetailsPage: React.FC = () => {
           },
         ]}
         defaultTab="Eventos"
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Excluir Usuário"
+        description="Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita e todos os dados relacionados serão removidos."
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isLoading={deleting}
+        variant="danger"
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        open={toast.open}
+        type={toast.type}
+        message={toast.message}
+        onOpenChange={(open) => setToast({ ...toast, open })}
       />
     </DetailsPageContainer>
   );

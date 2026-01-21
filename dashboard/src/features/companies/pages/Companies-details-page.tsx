@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   DetailsPageContainer,
   DetailsPageHeader,
@@ -15,10 +15,15 @@ import type { Company } from "../types";
 import type { Event } from "@/features/events/types";
 import { useRecentlyVisited } from "@/shared/hooks/useRecentlyVisited";
 import { CompanyForm } from "../components/CompanyForm";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { Toast } from "@/shared/components/ui/Toast";
+import { useAuth } from "@/shared/context/AuthContext";
 
 const CompaniesDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { addRecentVisit } = useRecentlyVisited();
+  const { user } = useAuth();
   const [eventSearch, setEventSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -26,6 +31,17 @@ const CompaniesDetailsPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{
+    open: boolean;
+    type: "success" | "error";
+    message: string;
+  }>({
+    open: false,
+    type: "success",
+    message: "",
+  });
 
   // Fetch company details and their events
   const fetchCompanyData = async () => {
@@ -77,6 +93,47 @@ const CompaniesDetailsPage: React.FC = () => {
     setEditModalOpen(true);
   };
 
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!id) return;
+
+    try {
+      setDeleting(true);
+      await companiesService.delete(Number(id));
+
+      setToast({
+        open: true,
+        type: "success",
+        message: "Empresa excluída com sucesso",
+      });
+
+      setTimeout(() => {
+        navigate("/companies");
+      }, 1500);
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Erro ao excluir empresa";
+
+      setToast({
+        open: true,
+        type: "error",
+        message: errorMessage,
+      });
+      setShowDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+  };
+
   if (loading) {
     return (
       <DetailsPageContainer>
@@ -97,12 +154,16 @@ const CompaniesDetailsPage: React.FC = () => {
     );
   }
 
+  // Check if user can delete (admin role)
+  const canDelete = user?.role === "admin";
+
   return (
     <DetailsPageContainer>
       <DetailsPageHeader
         title={company.name}
         subtitle="Empresa"
         onEdit={handleEdit}
+        onDelete={canDelete ? handleDelete : undefined}
       />
 
       <Modal
@@ -155,6 +216,28 @@ const CompaniesDetailsPage: React.FC = () => {
           },
         ]}
         defaultTab="Eventos"
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Excluir Empresa"
+        description="Tem certeza que deseja excluir esta empresa? Esta ação não pode ser desfeita e todos os dados relacionados serão removidos."
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isLoading={deleting}
+        variant="danger"
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        open={toast.open}
+        type={toast.type}
+        message={toast.message}
+        onOpenChange={(open) => setToast({ ...toast, open })}
       />
     </DetailsPageContainer>
   );

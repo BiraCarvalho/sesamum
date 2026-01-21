@@ -5,25 +5,39 @@ interface PageHeaderProps {
   title: string;
   subtitle?: string;
   onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export const DetailsPageHeader: React.FC<PageHeaderProps> = ({
   title,
   subtitle,
   onEdit,
+  onDelete,
 }) => (
   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
     <div>
       <h1 className="font-bold text-3xl text-text-title">{title}</h1>
       {subtitle && <p className="mt-1 text-subtitle ">{subtitle}</p>}
     </div>
-    {onEdit && (
-      <button
-        onClick={onEdit}
-        className="px-4 py-2 bg-button-bg text-white rounded-lg hover:bg-button-bg-hover hover:cursor-pointer transition-colors font-medium"
-      >
-        Editar
-      </button>
+    {(onEdit || onDelete) && (
+      <div className="flex gap-3">
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className="px-4 py-2 bg-button-bg text-white rounded-lg hover:bg-button-bg-hover hover:cursor-pointer transition-colors font-medium"
+          >
+            Editar
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:cursor-pointer transition-colors font-medium"
+          >
+            Excluir
+          </button>
+        )}
+      </div>
     )}
   </div>
 );

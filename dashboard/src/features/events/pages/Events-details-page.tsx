@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   DetailsPageContainer,
   DetailsPageHeader,
@@ -17,10 +17,15 @@ import { formatDate } from "@/shared/lib/dateUtils";
 import { useRecentlyVisited } from "@/shared/hooks/useRecentlyVisited";
 import { Modal } from "@/shared/components/ui/Modal";
 import { EventForm } from "../components/EventForm";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { Toast } from "@/shared/components/ui/Toast";
+import { useAuth } from "@/shared/context/AuthContext";
 
 const EventDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { addRecentVisit } = useRecentlyVisited();
+  const { user } = useAuth();
   const [staffSearch, setStaffSearch] = useState("");
   const [staffFilter, setStaffFilter] = useState("all");
   const [companySearch, setCompanySearch] = useState("");
@@ -31,6 +36,17 @@ const EventDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{
+    open: boolean;
+    type: "success" | "error";
+    message: string;
+  }>({
+    open: false,
+    type: "success",
+    message: "",
+  });
 
   // Fetch event details, companies, and staffs
   useEffect(() => {
@@ -95,6 +111,47 @@ const EventDetailsPage: React.FC = () => {
     setIsEditModalOpen(false);
   };
 
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!id) return;
+
+    try {
+      setDeleting(true);
+      await eventsService.delete(Number(id));
+
+      setToast({
+        open: true,
+        type: "success",
+        message: "Evento excluído com sucesso",
+      });
+
+      setTimeout(() => {
+        navigate("/events");
+      }, 1500);
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Erro ao excluir evento";
+
+      setToast({
+        open: true,
+        type: "error",
+        message: errorMessage,
+      });
+      setShowDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+  };
+
   const handleCompanyAdded = async () => {
     // Refetch companies after adding a new one
     if (!id) return;
@@ -147,12 +204,16 @@ const EventDetailsPage: React.FC = () => {
     );
   }
 
+  // Check if user can delete (admin role)
+  const canDelete = user?.role === "admin";
+
   return (
     <DetailsPageContainer>
       <DetailsPageHeader
         title={event.name}
         subtitle={`Evento${event.type === "project" ? " de Projeto" : ""}`}
         onEdit={handleEdit}
+        onDelete={canDelete ? handleDelete : undefined}
       />
 
       <DetailsInfoSection>
@@ -263,6 +324,28 @@ const EventDetailsPage: React.FC = () => {
           onCancel={handleEditCancel}
         />
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Excluir Evento"
+        description="Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita e todos os dados relacionados serão removidos."
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isLoading={deleting}
+        variant="danger"
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        open={toast.open}
+        type={toast.type}
+        message={toast.message}
+        onOpenChange={(open) => setToast({ ...toast, open })}
+      />
     </DetailsPageContainer>
   );
 };

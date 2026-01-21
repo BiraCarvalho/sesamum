@@ -23,6 +23,7 @@ const menuItems = [
   { id: "users", label: "Usuários", icon: ShieldUser, path: "/users" },
 ];
 
+const viewsMode = ["admin", "production", "service", "control"];
 const userId = 1; // Replace with actual user ID from auth context or state
 
 interface SidebarProps {
@@ -114,24 +115,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                 <Select.Portal>
                   <Select.Content className="overflow-hidden bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                     <Select.Viewport className="p-1">
-                      <Select.Item
-                        value="admin"
-                        className="relative flex items-center px-8 py-2 text-sm text-gray-900 rounded cursor-pointer hover:bg-gray-100 outline-none data-highlighted:bg-gray-100"
-                      >
-                        <Select.ItemText>Admin</Select.ItemText>
-                      </Select.Item>
-                      <Select.Item
-                        value="company"
-                        className="relative flex items-center px-8 py-2 text-sm text-gray-900 rounded cursor-pointer hover:bg-gray-100 outline-none data-highlighted:bg-gray-100"
-                      >
-                        <Select.ItemText>Company</Select.ItemText>
-                      </Select.Item>
-                      <Select.Item
-                        value="control"
-                        className="relative flex items-center px-8 py-2 text-sm text-gray-900 rounded cursor-pointer hover:bg-gray-100 outline-none data-highlighted:bg-gray-100"
-                      >
-                        <Select.ItemText>Control</Select.ItemText>
-                      </Select.Item>
+                      {viewsMode.map((mode) => (
+                        <Select.Item
+                          key={mode}
+                          value="admin"
+                          className="relative flex items-center px-8 py-2 text-sm text-gray-900 rounded cursor-pointer hover:bg-gray-100 outline-none data-highlighted:bg-gray-100"
+                        >
+                          <Select.ItemText>{mode}</Select.ItemText>
+                        </Select.Item>
+                      ))}
                     </Select.Viewport>
                   </Select.Content>
                 </Select.Portal>

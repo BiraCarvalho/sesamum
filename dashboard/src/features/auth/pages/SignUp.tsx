@@ -7,6 +7,7 @@ import { userInvitesService } from "@/features/users/api/userInvites.service";
 import { companiesService } from "@/features/companies/api/companies.service";
 import type { UserInvite } from "@/shared/types";
 import type { Company } from "@/features/companies";
+import logo from "@/assets/logo.png";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -124,8 +125,7 @@ export default function SignUpPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-title mb-2">Sesamum</h1>
-            <p className="text-subtitle text-sm">Cadastro via Convite</p>
+            <img src={logo} alt="Sesamum Logo" />
           </div>
 
           {/* Loading Skeleton */}
