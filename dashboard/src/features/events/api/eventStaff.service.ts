@@ -26,7 +26,7 @@ export const eventStaffService = {
   /**
    * Get a specific event-staff relationship by ID
    */
-  getById: async (id: number) => {
+  getById: async (id: string | number) => {
     return apiClient.get<EventStaff>(ENDPOINTS.EVENT_STAFF.DETAIL(id));
   },
 
@@ -40,7 +40,7 @@ export const eventStaffService = {
   /**
    * Delete an event-staff relationship
    */
-  delete: async (id: number) => {
+  delete: async (id: string | number) => {
     return apiClient.delete(ENDPOINTS.EVENT_STAFF.DELETE(id));
   },
 

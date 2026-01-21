@@ -13,6 +13,7 @@ import UsersDetailsPage from "@/features/users/pages/Users-details-page";
 import StaffsPage from "@/features/staffs/pages/Staffs-page";
 import StaffsDetailsPage from "@/features/staffs/pages/Staffs-details-page";
 import CompaniesDetailsPage from "@/features/companies/pages/Companies-details-page";
+import CheckInPage from "@/features/checkin/pages/CheckIn-page";
 import { LoginPage, SignUpPage } from "@/features/auth";
 
 const App: React.FC = () => {
@@ -89,6 +90,7 @@ const App: React.FC = () => {
                           path="/users/:id"
                           element={<UsersDetailsPage />}
                         />
+                        <Route path="/checkin" element={<CheckInPage />} />
                       </Routes>
                     </div>
                   </main>

@@ -28,7 +28,7 @@ export const apiClient: AxiosInstance = axios.create({
 
 /**
  * Request interceptor
- * Adds JWT token to all requests if available
+ * Adds JWT token and user context to all requests if available
  */
 apiClient.interceptors.request.use(
   (config) => {
@@ -39,11 +39,17 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // Add dev role for MSW to apply role-based filtering
+    const devRole = localStorage.getItem("dev_role");
+    if (devRole) {
+      config.headers["X-User-Role"] = devRole;
+    }
+
     return config;
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 /**
@@ -71,7 +77,7 @@ apiClient.interceptors.response.use(
             `${API_BASE_URL}/api/v1/auth/refresh/`,
             {
               refresh: refreshToken,
-            }
+            },
           );
 
           const { access } = response.data;
@@ -114,7 +120,7 @@ apiClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 /**

@@ -20,6 +20,7 @@ import { EventForm } from "../components/EventForm";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { Toast } from "@/shared/components/ui/Toast";
 import { useAuth } from "@/shared/context/AuthContext";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 
 const EventDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -204,15 +205,17 @@ const EventDetailsPage: React.FC = () => {
     );
   }
 
-  // Check if user can delete (admin role)
-  const canDelete = user?.role === "admin";
+  // Check permissions
+  const { can } = usePermissions();
+  const canEdit = can("update", "event");
+  const canDelete = can("delete", "event");
 
   return (
     <DetailsPageContainer>
       <DetailsPageHeader
         title={event.name}
         subtitle={`Evento${event.type === "project" ? " de Projeto" : ""}`}
-        onEdit={handleEdit}
+        onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
       />
 

@@ -1,0 +1,424 @@
+import React, { useState, useEffect } from "react";
+import {
+  PageHeader,
+  PageContainer,
+} from "@/shared/components/layout/PageLayout";
+import { checksService } from "../api/checks.service";
+import { eventsService } from "@/features/events/api/events.service";
+import { eventStaffService } from "@/features/events/api/eventStaff.service";
+import type { Event } from "@/features/events/types";
+import type { EventStaff } from "@/features/events/types";
+import { useAuth } from "@/shared/context/AuthContext";
+import {
+  Search,
+  CheckCircle,
+  XCircle,
+  UserCheck,
+  Clock,
+  QrCode,
+} from "lucide-react";
+import Badge from "@/shared/components/ui/Badge";
+import { formatDateTime } from "@/shared/lib/dateUtils";
+import { Toast } from "@/shared/components/ui/Toast";
+
+type SearchMode = "cpf" | "qrcode";
+
+const CheckInPage: React.FC = () => {
+  const { user } = useAuth();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [searchMode, setSearchMode] = useState<SearchMode>("cpf");
+  const [searchCPF, setSearchCPF] = useState("");
+  const [searchEventStaffId, setSearchEventStaffId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [searchResult, setSearchResult] = useState<EventStaff | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    open: boolean;
+    type: "success" | "error";
+    message: string;
+  }>({ open: false, type: "success", message: "" });
+
+  // Fetch open events on mount
+  useEffect(() => {
+    fetchOpenEvents();
+  }, []);
+
+  const fetchOpenEvents = async () => {
+    try {
+      const response = await eventsService.getAll({ status: "open" });
+      setEvents(response.data);
+      if (response.data.length > 0) {
+        setSelectedEventId(response.data[0].id);
+      }
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      setError("Erro ao carregar eventos");
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!selectedEventId && searchMode === "cpf") {
+      showToast("error", "Selecione um evento");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSearchResult(null);
+
+    try {
+      if (searchMode === "cpf") {
+        // CPF Search Mode
+        if (!searchCPF.trim()) {
+          showToast("error", "Digite um CPF");
+          setLoading(false);
+          return;
+        }
+
+        // Remove formatting from CPF
+        const cleanCPF = searchCPF.replace(/\D/g, "");
+
+        if (cleanCPF.length !== 11) {
+          showToast("error", "CPF inválido");
+          setLoading(false);
+          return;
+        }
+
+        // Search for staff in the selected event
+        const response = await eventStaffService.getAll({
+          event_id: selectedEventId!,
+          staff_cpf: cleanCPF,
+        });
+
+        if (response.data.length === 0) {
+          showToast("error", "Staff não encontrado neste evento");
+          setSearchResult(null);
+        } else {
+          setSearchResult(response.data[0]);
+        }
+      } else {
+        // QR Code (Event Staff ID) Search Mode
+        if (!searchEventStaffId.trim()) {
+          showToast("error", "Digite ou escaneie um ID");
+          setLoading(false);
+          return;
+        }
+
+        // Search directly by event_staff ID
+        const response = await eventStaffService.getById(searchEventStaffId);
+        setSearchResult(response.data);
+
+        // Auto-select the event if not already selected
+        if (!selectedEventId) {
+          setSelectedEventId(response.data.event_id);
+        }
+      }
+    } catch (err) {
+      console.error("Error searching staff:", err);
+      showToast("error", "Erro ao buscar staff");
+      setSearchResult(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckAction = async (
+    action: "registration" | "check-in" | "check-out",
+  ) => {
+    if (!searchResult || !user) return;
+
+    setLoading(true);
+    try {
+      await checksService.create({
+        action,
+        events_staff_id: searchResult.id,
+        user_control_id: user.id,
+      });
+
+      showToast("success", `${getActionLabel(action)} realizado com sucesso!`);
+
+      // Refresh the search result to update status
+      handleSearch();
+    } catch (err: any) {
+      console.error("Error performing check action:", err);
+      const errorMessage =
+        err.response?.data?.error ||
+        `Erro ao realizar ${getActionLabel(action)}`;
+      showToast("error", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ open: true, type, message });
+  };
+
+  const getActionLabel = (action: string) => {
+    const labels = {
+      registration: "Registro",
+      "check-in": "Check-in",
+      "check-out": "Check-out",
+    };
+    return labels[action as keyof typeof labels] || action;
+  };
+
+  const getStatusBadge = (eventsStaff: EventStaff) => {
+    if (!eventsStaff.registration_check_id) {
+      return <Badge variant="pending" label="Aguardando Registro" />;
+    }
+
+    if (eventsStaff.lastCheck?.action === "check-in") {
+      return <Badge variant="open" label="Dentro do Evento" />;
+    }
+
+    return <Badge variant="credentialed" label="Registrado" />;
+  };
+
+  const canRegister = searchResult && !searchResult.registration_check_id;
+  const canCheckIn =
+    searchResult &&
+    searchResult.registration_check_id &&
+    searchResult.lastCheck?.action !== "check-in";
+  const canCheckOut =
+    searchResult && searchResult.lastCheck?.action === "check-in";
+
+  return (
+    <PageContainer>
+      <PageHeader
+        title="Check-in / Check-out"
+        subtitle="Controle de acesso de staff aos eventos"
+      />
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700 text-sm font-medium">{error}</p>
+        </div>
+      )}
+
+      {/* Search Mode Toggle */}
+      <div className="mb-6 p-6 bg-card-primary rounded-xl border border-card-border shadow-sm">
+        <label className="block text-sm font-medium text-text-subtitle mb-3">
+          Modo de Busca
+        </label>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setSearchMode("cpf");
+              setSearchResult(null);
+              setSearchEventStaffId("");
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              searchMode === "cpf"
+                ? "bg-primary text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            <Search size={18} />
+            Buscar por CPF
+          </button>
+          <button
+            onClick={() => {
+              setSearchMode("qrcode");
+              setSearchResult(null);
+              setSearchCPF("");
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              searchMode === "qrcode"
+                ? "bg-primary text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            <QrCode size={18} />
+            Buscar por QR Code
+          </button>
+        </div>
+      </div>
+
+      {/* Event Selection (only shown in CPF mode) */}
+      {searchMode === "cpf" && (
+        <div className="mb-6 p-6 bg-card-primary rounded-xl border border-card-border shadow-sm">
+          <label className="block text-sm font-medium text-text-subtitle mb-2">
+            Selecione o Evento
+          </label>
+          <select
+            value={selectedEventId || ""}
+            onChange={(e) => setSelectedEventId(Number(e.target.value))}
+            className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-input-bg border border-input-border text-input-text"
+          >
+            <option value="">Selecione um evento</option>
+            {events.map((event) => (
+              <option key={event.id} value={event.id}>
+                {event.name} ({formatDateTime(event.date_begin).split(" ")[0]})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Search Input */}
+      <div className="mb-6 p-6 bg-card-primary rounded-xl border border-card-border shadow-sm">
+        <label className="block text-sm font-medium text-text-subtitle mb-2">
+          {searchMode === "cpf"
+            ? "Buscar Staff por CPF"
+            : "Buscar Staff por QR Code"}
+        </label>
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            {searchMode === "cpf" ? (
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-input-icon"
+                size={20}
+              />
+            ) : (
+              <QrCode
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-input-icon"
+                size={20}
+              />
+            )}
+            {searchMode === "cpf" ? (
+              <input
+                type="text"
+                placeholder="Digite o CPF (somente números)"
+                value={searchCPF}
+                onChange={(e) => setSearchCPF(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-input-bg border border-input-border text-input-text"
+                maxLength={14}
+              />
+            ) : (
+              <input
+                type="text"
+                placeholder="Digite ou escaneie o ID do QR Code"
+                value={searchEventStaffId}
+                onChange={(e) => setSearchEventStaffId(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-input-bg border border-input-border text-input-text font-mono"
+              />
+            )}
+          </div>
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Buscando..." : "Buscar"}
+          </button>
+        </div>
+        {searchMode === "qrcode" && (
+          <p className="mt-2 text-xs text-text-subtitle">
+            O ID do evento-staff será automaticamente escaneado do QR Code
+          </p>
+        )}
+      </div>
+
+      {/* Search Result */}
+      {searchResult && (
+        <div className="p-6 bg-card-primary rounded-xl border border-card-border shadow-sm">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-text-title mb-1">
+              Staff Encontrado
+            </h3>
+            {getStatusBadge(searchResult)}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                CPF
+              </label>
+              <p className="mt-1 text-text-title">{searchResult.staff_cpf}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                ID EventStaff (QR Code)
+              </label>
+              <p className="mt-1 text-text-title font-mono text-sm break-all">
+                {searchResult.id}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-text-subtitle">
+                ID do Evento
+              </label>
+              <p className="mt-1 text-text-title">{searchResult.event_id}</p>
+            </div>
+            {searchResult.lastCheck && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-text-subtitle">
+                    Última Ação
+                  </label>
+                  <p className="mt-1 text-text-title capitalize">
+                    {getActionLabel(searchResult.lastCheck.action)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-text-subtitle">
+                    Data/Hora
+                  </label>
+                  <p className="mt-1 text-text-title">
+                    {formatDateTime(searchResult.lastCheck.timestamp)}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 flex-wrap">
+            {canRegister && (
+              <button
+                onClick={() => handleCheckAction("registration")}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <UserCheck size={18} />
+                Registrar Staff
+              </button>
+            )}
+
+            {canCheckIn && (
+              <button
+                onClick={() => handleCheckAction("check-in")}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckCircle size={18} />
+                Check-in
+              </button>
+            )}
+
+            {canCheckOut && (
+              <button
+                onClick={() => handleCheckAction("check-out")}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <XCircle size={18} />
+                Check-out
+              </button>
+            )}
+
+            {!canRegister && !canCheckIn && !canCheckOut && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <Clock size={18} />
+                <span>Nenhuma ação disponível no momento</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <Toast
+        open={toast.open}
+        onOpenChange={(open) => setToast({ ...toast, open })}
+        type={toast.type}
+        message={toast.message}
+      />
+    </PageContainer>
+  );
+};
+
+export default CheckInPage;

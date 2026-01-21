@@ -14,9 +14,11 @@ import { useNavigate } from "react-router-dom";
 import { eventsService } from "../api/events.service";
 import { EventForm } from "../components/EventForm";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 
 const EventsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { can } = usePermissions();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -106,7 +108,7 @@ const EventsPage: React.FC = () => {
           { value: "close", label: "Concluídos" },
         ]}
         addLabel="Novo Evento"
-        onAdd={() => setModalOpen(true)}
+        onAdd={can("create", "event") ? () => setModalOpen(true) : undefined}
         searchValue={search}
         onSearchChange={setSearch}
         filterValue={filter}

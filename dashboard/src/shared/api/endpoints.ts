@@ -97,9 +97,9 @@ export const ENDPOINTS = {
   // Event Staff (Relationship)
   EVENT_STAFF: {
     LIST: "/api/v1/event-staff/",
-    DETAIL: (id: number) => `/api/v1/event-staff/${id}/`,
+    DETAIL: (id: string | number) => `/api/v1/event-staff/${id}/`,
     CREATE: "/api/v1/event-staff/",
-    DELETE: (id: number) => `/api/v1/event-staff/${id}/`,
+    DELETE: (id: string | number) => `/api/v1/event-staff/${id}/`,
     BULK: (eventId: number) => `/api/v1/events/${eventId}/staff/bulk`,
   },
 

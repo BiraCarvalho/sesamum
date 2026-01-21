@@ -13,9 +13,11 @@ import Badge from "@/shared/components/ui/Badge";
 import { useNavigate } from "react-router-dom";
 import { projectsService } from "../api/projects.service";
 import { ProjectForm } from "../components/ProjectForm";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { can } = usePermissions();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -88,7 +90,7 @@ const ProjectsPage: React.FC = () => {
           { value: "close", label: "Concluídos" },
         ]}
         addLabel="Novo Projeto"
-        onAdd={() => setModalOpen(true)}
+        onAdd={can("create", "project") ? () => setModalOpen(true) : undefined}
         searchValue={search}
         onSearchChange={setSearch}
         filterValue={filter}

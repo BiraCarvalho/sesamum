@@ -13,6 +13,7 @@ import { staffsService } from "../api/staffs.service";
 import { formatDateTime } from "@/shared/lib/dateUtils";
 import { StaffForm } from "../components/StaffForm";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 
 // Mock company names (in production, this would come from API)
 const COMPANY_NAMES: Record<number, string> = {
@@ -25,6 +26,7 @@ const COMPANY_NAMES: Record<number, string> = {
 
 const StaffsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { can } = usePermissions();
   const [staffSearch, setStaffSearch] = useState("");
   const [staffFilter, setStaffFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -84,7 +86,7 @@ const StaffsPage: React.FC = () => {
         searchPlaceholder="Buscar por Nome ou CPF..."
         filterOptions={[]}
         addLabel="Adicionar Staff"
-        onAdd={() => setModalOpen(true)}
+        onAdd={can("create", "staff") ? () => setModalOpen(true) : undefined}
         searchValue={staffSearch}
         onSearchChange={setStaffSearch}
         filterValue={staffFilter}

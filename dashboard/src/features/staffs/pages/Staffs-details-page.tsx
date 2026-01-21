@@ -19,6 +19,7 @@ import { StaffForm } from "../components/StaffForm";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { Toast } from "@/shared/components/ui/Toast";
 import { useAuth } from "@/shared/context/AuthContext";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 
 // Mock company names (should come from companies API in production)
 const COMPANY_NAMES: Record<number, string> = {
@@ -165,17 +166,17 @@ const StaffsDetailsPage: React.FC = () => {
     );
   }
 
-  // Check if user can delete (admin or company role with matching company_id)
-  const canDelete =
-    user?.role === "admin" ||
-    (user?.role === "company" && user?.company_id === staff.company_id);
+  // Check permissions (admin or company role with matching company_id)
+  const { can } = usePermissions();
+  const canEdit = can("update", "staff", { company_id: staff.company_id });
+  const canDelete = can("delete", "staff", { company_id: staff.company_id });
 
   return (
     <DetailsPageContainer>
       <DetailsPageHeader
         title={staff.name}
         subtitle={staff.email}
-        onEdit={() => setEditModalOpen(true)}
+        onEdit={canEdit ? () => setEditModalOpen(true) : undefined}
         onDelete={canDelete ? handleDelete : undefined}
       />
 

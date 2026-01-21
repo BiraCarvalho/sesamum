@@ -13,14 +13,10 @@ import type { User } from "@/features/users/types";
  * Provides authentication state and methods throughout the application.
  * Manages JWT tokens (access and refresh) in localStorage.
  *
- * NOTE: Role-based access control is not implemented yet.
- * This is a basic implementation for token management only.
- *
- * Future enhancements:
- * - Add login/logout methods
- * - Add user role management (admin, company, control)
- * - Add permission checking utilities
- * - Integrate with actual auth endpoints
+ * Development Mode:
+ * - Supports role switching via setDevRole() for testing different permissions
+ * - Dev role persists in localStorage across page refreshes
+ * - User.role reflects the dev role when in development mode
  */
 
 interface AuthContextType {
@@ -28,8 +24,11 @@ interface AuthContextType {
   accessToken: string | null;
   refreshToken: string | null;
   user: User | null;
+  devRole: "admin" | "company" | "control" | null;
+  isDevMode: boolean;
   setTokens: (access: string, refresh: string) => void;
   clearTokens: () => void;
+  setDevRole: (role: "admin" | "company" | "control" | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,21 +40,34 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [devRole, setDevRoleState] = useState<
+    "admin" | "company" | "control" | null
+  >(null);
 
-  // Mock user for development (in production, this would come from JWT or API)
-  const [user] = useState<User>({
+  // Base user for development (in production, this would come from JWT or API)
+  const baseUser: User = {
     id: 1,
     name: "Admin User",
     picture: "",
     email: "admin@sesamum.com",
     role: "admin",
     company_id: 1,
-  });
+  };
 
-  // Load tokens from localStorage on mount
+  // Return user with dev role override if in dev mode
+  const user: User | null = devRole ? { ...baseUser, role: devRole } : baseUser;
+
+  const isDevMode = devRole !== null;
+
+  // Load tokens and dev role from localStorage on mount
   useEffect(() => {
     const storedAccessToken = localStorage.getItem("access_token");
     const storedRefreshToken = localStorage.getItem("refresh_token");
+    const storedDevRole = localStorage.getItem("dev_role") as
+      | "admin"
+      | "company"
+      | "control"
+      | null;
 
     if (storedAccessToken) {
       setAccessToken(storedAccessToken);
@@ -63,6 +75,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     if (storedRefreshToken) {
       setRefreshToken(storedRefreshToken);
+    }
+
+    if (storedDevRole) {
+      setDevRoleState(storedDevRole);
     }
   }, []);
 
@@ -93,6 +109,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem("refresh_token");
   };
 
+  const setDevRole = (role: "admin" | "company" | "control" | null) => {
+    setDevRoleState(role);
+    if (role) {
+      localStorage.setItem("dev_role", role);
+    } else {
+      localStorage.removeItem("dev_role");
+    }
+  };
+
   const isAuthenticated = Boolean(accessToken);
 
   const value: AuthContextType = {
@@ -100,8 +125,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     accessToken,
     refreshToken,
     user,
+    devRole,
+    isDevMode,
     setTokens,
     clearTokens,
+    setDevRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

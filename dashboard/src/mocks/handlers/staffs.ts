@@ -30,9 +30,21 @@ export const staffHandlers = [
     const companyId = url.searchParams.get("company_id");
     const search = url.searchParams.get("search");
 
+    // Check user role from headers (for dev mode role switching)
+    const userRole = request.headers.get("X-User-Role");
+
     let filtered = [...mockStaffs];
 
-    // Filter by company_id
+    // Auto-filter by company_id for company role users
+    // In production, this filtering happens on the backend based on JWT
+    if (userRole === "company") {
+      // Mock: assume company users are from company_id 1
+      // In production, this would come from the JWT token
+      const userCompanyId = 1;
+      filtered = filtered.filter((s) => s.company_id === userCompanyId);
+    }
+
+    // Filter by company_id (if explicitly provided)
     if (companyId) {
       filtered = filtered.filter((s) => s.company_id === Number(companyId));
     }

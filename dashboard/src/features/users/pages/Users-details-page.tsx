@@ -18,6 +18,7 @@ import { UserForm } from "../components/UserForm";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { Toast } from "@/shared/components/ui/Toast";
 import { useAuth } from "@/shared/context/AuthContext";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 
 // Mock company names (should come from companies API in production)
 const COMPANY_NAMES: Record<number, string> = {
@@ -187,15 +188,17 @@ const UsersDetailsPage: React.FC = () => {
     return roleLabels[role as keyof typeof roleLabels] || role;
   };
 
-  // Check if user can delete (only admin role)
-  const canDelete = currentUser?.role === "admin";
+  // Check permissions (only admin role)
+  const { can } = usePermissions();
+  const canEdit = can("update", "user");
+  const canDelete = can("delete", "user");
 
   return (
     <DetailsPageContainer>
       <DetailsPageHeader
         title={user.name}
         subtitle={getRoleLabel(user.role)}
-        onEdit={handleEdit}
+        onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
       />
 

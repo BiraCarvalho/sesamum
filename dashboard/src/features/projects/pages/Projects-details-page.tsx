@@ -22,6 +22,7 @@ import { ProjectForm } from "../components/ProjectForm";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { Toast } from "@/shared/components/ui/Toast";
 import { useAuth } from "@/shared/context/AuthContext";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 
 const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -230,15 +231,17 @@ const ProjectDetailsPage: React.FC = () => {
     );
   }
 
-  // Check if user can delete (admin role)
-  const canDelete = user?.role === "admin";
+  // Check permissions
+  const { can } = usePermissions();
+  const canEdit = can("update", "project");
+  const canDelete = can("delete", "project");
 
   return (
     <DetailsPageContainer>
       <DetailsPageHeader
         title={project.name}
         subtitle="Projeto"
-        onEdit={handleEdit}
+        onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
       />
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -10,20 +10,69 @@ import {
   X,
   ShieldUser,
   ChevronDown,
+  ClipboardCheck,
 } from "lucide-react";
 import * as Select from "@radix-ui/react-select";
 import { AvatarComponent } from "../ui/Avatar";
+import { useAuth } from "../../context/AuthContext";
 
-const menuItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { id: "projects", label: "Projetos", icon: Briefcase, path: "/projects" },
-  { id: "events", label: "Eventos", icon: Calendar, path: "/events" },
-  { id: "companies", label: "Empresas", icon: Building2, path: "/companies" },
-  { id: "staffs", label: "Staffs", icon: Users, path: "/staffs" },
-  { id: "users", label: "Usuários", icon: ShieldUser, path: "/users" },
+const allMenuItems = [
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    path: "/",
+    roles: ["admin", "company", "control"],
+  },
+  {
+    id: "projects",
+    label: "Projetos",
+    icon: Briefcase,
+    path: "/projects",
+    roles: ["admin", "company", "control"],
+  },
+  {
+    id: "events",
+    label: "Eventos",
+    icon: Calendar,
+    path: "/events",
+    roles: ["admin", "company", "control"],
+  },
+  {
+    id: "companies",
+    label: "Empresas",
+    icon: Building2,
+    path: "/companies",
+    roles: ["admin"],
+  },
+  {
+    id: "staffs",
+    label: "Staffs",
+    icon: Users,
+    path: "/staffs",
+    roles: ["admin", "company", "control"],
+  },
+  {
+    id: "users",
+    label: "Usuários",
+    icon: ShieldUser,
+    path: "/users",
+    roles: ["admin"],
+  },
+  {
+    id: "checkin",
+    label: "Check-in",
+    icon: ClipboardCheck,
+    path: "/checkin",
+    roles: ["admin", "control"],
+  },
 ];
 
-const viewsMode = ["admin", "production", "service", "control"];
+const viewsMode: Array<"admin" | "company" | "control"> = [
+  "admin",
+  "company",
+  "control",
+];
 const userId = 1; // Replace with actual user ID from auth context or state
 
 interface SidebarProps {
@@ -34,9 +83,20 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentRole, setCurrentRole] = useState<
-    "admin" | "company" | "control"
-  >("admin");
+  const { user, devRole, isDevMode, setDevRole } = useAuth();
+
+  // Filter menu items based on user role
+  const menuItems = allMenuItems.filter(
+    (item) => user?.role && item.roles.includes(user.role),
+  );
+
+  const handleRoleChange = (role: "admin" | "company" | "control") => {
+    setDevRole(role);
+  };
+
+  const clearDevMode = () => {
+    setDevRole(null);
+  };
 
   return (
     <>
@@ -92,16 +152,29 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           </nav>
           {/* User Profile / Logout */}
           <div className="p-4 border-t border-sidebar-border">
+            {/* Dev Mode Indicator */}
+            {isDevMode && (
+              <div className="mb-3 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <p className="text-xs text-yellow-500 font-medium">
+                  🔧 Modo de Desenvolvimento
+                </p>
+                <button
+                  onClick={clearDevMode}
+                  className="text-xs text-yellow-500 underline hover:text-yellow-400 mt-1"
+                >
+                  Voltar ao modo normal
+                </button>
+              </div>
+            )}
+
             {/* Role Selector */}
             <div className="mb-4">
               <label className="text-xs text-sidebar-text-muted mb-1 block">
                 Testar como:
               </label>
               <Select.Root
-                value={currentRole}
-                onValueChange={(value) =>
-                  setCurrentRole(value as "admin" | "company" | "control")
-                }
+                value={devRole || user?.role || "admin"}
+                onValueChange={handleRoleChange}
               >
                 <Select.Trigger className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-sidebar-hover-bg text-sidebar-text text-sm border border-sidebar-border hover:bg-opacity-80 transition-colors">
                   <Select.Value />
@@ -118,7 +191,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                       {viewsMode.map((mode) => (
                         <Select.Item
                           key={mode}
-                          value="admin"
+                          value={mode}
                           className="relative flex items-center px-8 py-2 text-sm text-gray-900 rounded cursor-pointer hover:bg-gray-100 outline-none data-highlighted:bg-gray-100"
                         >
                           <Select.ItemText>{mode}</Select.ItemText>

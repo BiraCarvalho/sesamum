@@ -2,6 +2,7 @@ import { http, HttpResponse, delay } from "msw";
 import { mockEventsStaffs, generateEventStaffId } from "../data/eventsStaffs";
 import { mockEvents } from "../data/events";
 import { mockStaffs, sanitizeCPF } from "../data/staffs";
+import { getLastCheckForStaff } from "../data/checks";
 import type { EventStaff } from "../../features/events/types";
 
 /**
@@ -19,11 +20,23 @@ import type { EventStaff } from "../../features/events/types";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
+/**
+ * Helper function to enrich EventStaff with lastCheck
+ */
+const enrichWithLastCheck = (eventStaff: EventStaff): EventStaff => {
+  const lastCheck = getLastCheckForStaff(eventStaff.id);
+  return {
+    ...eventStaff,
+    lastCheck: lastCheck || undefined,
+  };
+};
+
 export const eventStaffsHandlers = [
   // GET /api/v1/event-staff/ - List event-staff relationships
-  // Supports filtering by staff_cpf or event_id
-  // When staff_cpf is provided, returns full Event objects
-  // When event_id is provided, returns full Staff objects
+  // Supports filtering by staff_cpf, event_id, or both
+  // When both staff_cpf and event_id are provided, returns EventStaff objects
+  // When only staff_cpf is provided, returns full Event objects
+  // When only event_id is provided, returns full Staff objects
   http.get(`${API_BASE_URL}/api/v1/event-staff/`, async ({ request }) => {
     await delay(600);
 
@@ -33,7 +46,27 @@ export const eventStaffsHandlers = [
 
     let filtered = [...mockEventsStaffs];
 
-    // Filter by staff_cpf - return events for this staff member
+    // Filter by both staff_cpf AND event_id - return EventStaff objects
+    if (staffCpfParam && eventIdParam) {
+      const eventId = Number(eventIdParam);
+      const sanitizedCpf = sanitizeCPF(staffCpfParam);
+
+      const eventStaffRelations = filtered.filter(
+        (es) => es.staff_cpf === sanitizedCpf && es.event_id === eventId,
+      );
+
+      // Enrich with lastCheck before returning
+      const enrichedRelations = eventStaffRelations.map(enrichWithLastCheck);
+
+      return HttpResponse.json(enrichedRelations, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    // Filter by staff_cpf only - return events for this staff member
     if (staffCpfParam) {
       const staffEventRelations = filtered.filter(
         (es) => es.staff_cpf === staffCpfParam,
@@ -51,7 +84,7 @@ export const eventStaffsHandlers = [
       });
     }
 
-    // Filter by event_id - return staff members for this event
+    // Filter by event_id only - return staff members for this event
     if (eventIdParam) {
       const eventId = Number(eventIdParam);
       const eventStaffRelations = filtered.filter(
@@ -92,7 +125,10 @@ export const eventStaffsHandlers = [
       );
     }
 
-    return HttpResponse.json(relation, {
+    // Enrich with lastCheck before returning
+    const enrichedRelation = enrichWithLastCheck(relation);
+
+    return HttpResponse.json(enrichedRelation, {
       status: 200,
       headers: {
         "Content-Type": "application/json",

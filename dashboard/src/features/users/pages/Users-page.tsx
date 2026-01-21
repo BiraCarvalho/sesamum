@@ -17,6 +17,7 @@ import { UserForm } from "../components/UserForm";
 import UserInviteForm from "../components/UserInviteForm";
 import { InviteDetailsModal } from "../components/InviteDetailsModal";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { usePermissions } from "@/shared/hooks/usePermissions";
 
 // Unified type for displaying users and invites in the same list
 type UserListItem =
@@ -25,6 +26,7 @@ type UserListItem =
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
+  const { can } = usePermissions();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -252,7 +254,7 @@ const UsersPage: React.FC = () => {
           { value: "convite", label: "Convites" },
         ]}
         addLabel="Novo Usuário"
-        onAdd={() => setModalOpen(true)}
+        onAdd={can("create", "user") ? () => setModalOpen(true) : undefined}
         searchValue={search}
         onSearchChange={setSearch}
         filterValue={filter}
