@@ -53,7 +53,7 @@ export const Toast: React.FC<ToastProps> = ({
         <span className="flex-1">{message}</span>
         <ToastPrimitive.Close asChild>
           <button
-            className="ml-2 text-lg text-gray-2000 hover:text-gray-800 focus:outline-none"
+            className="ml-2 text-lg text-gray-2000 hover:text-gray-800 hover:cursor-pointer focus:outline-none"
             aria-label="Fechar"
           >
             &times;

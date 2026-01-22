@@ -209,7 +209,7 @@ const CheckInPage: React.FC = () => {
               setSearchResult(null);
               setSearchEventStaffId("");
             }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium hover:cursor-pointer transition-colors ${
               searchMode === "cpf"
                 ? "bg-primary text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -224,7 +224,7 @@ const CheckInPage: React.FC = () => {
               setSearchResult(null);
               setSearchCPF("");
             }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium hover:cursor-pointer transition-colors ${
               searchMode === "qrcode"
                 ? "bg-primary text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -301,7 +301,7 @@ const CheckInPage: React.FC = () => {
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover hover:cursor-pointer transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Buscando..." : "Buscar"}
           </button>
@@ -372,7 +372,7 @@ const CheckInPage: React.FC = () => {
               <button
                 onClick={() => handleCheckAction("registration")}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:cursor-pointer transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <UserCheck size={18} />
                 Registrar Staff
@@ -383,7 +383,7 @@ const CheckInPage: React.FC = () => {
               <button
                 onClick={() => handleCheckAction("check-in")}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 hover:cursor-pointer transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CheckCircle size={18} />
                 Check-in
@@ -394,7 +394,7 @@ const CheckInPage: React.FC = () => {
               <button
                 onClick={() => handleCheckAction("check-out")}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 hover:cursor-pointer transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <XCircle size={18} />
                 Check-out

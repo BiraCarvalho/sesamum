@@ -146,7 +146,7 @@ export default function SignUpPage() {
               </div>
               <button
                 onClick={() => navigate("/login")}
-                className="w-full px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                className="w-full px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 hover:cursor-pointer transition-colors"
               >
                 Voltar para Login
               </button>
@@ -231,7 +231,7 @@ export default function SignUpPage() {
                   invite.status === "used" ||
                   invite.status === "expired"
                 }
-                className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-hover hover:cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isRegistering ? (
                   <span>Cadastrando...</span>
@@ -269,7 +269,7 @@ export default function SignUpPage() {
               <div className="text-center">
                 <button
                   onClick={() => navigate("/login")}
-                  className="text-xs text-primary hover:text-primary-hover transition-colors"
+                  className="text-xs text-primary hover:text-primary-hover hover:cursor-pointer transition-colors"
                 >
                   Já possui conta? Faça login
                 </button>

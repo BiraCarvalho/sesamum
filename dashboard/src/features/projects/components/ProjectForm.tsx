@@ -42,7 +42,7 @@ export function ProjectForm({
     defaultValues: {
       name: project?.name || "",
       description: project?.description || "",
-      status: project?.status || "open",
+      status: project?.status || "pending",
       company_id: project?.company_id || undefined,
       date_begin: project?.date_begin
         ? formatDateToDDMMYYYY(project.date_begin)

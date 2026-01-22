@@ -28,13 +28,13 @@ const Unauthorized: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={() => navigate(-1)}
-            className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+            className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 hover:cursor-pointer transition-colors"
           >
             Voltar
           </button>
           <button
             onClick={() => navigate("/")}
-            className="px-6 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors"
+            className="px-6 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover hover:cursor-pointer transition-colors"
           >
             Ir para o Dashboard
           </button>

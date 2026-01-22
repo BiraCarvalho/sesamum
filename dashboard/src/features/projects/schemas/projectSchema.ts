@@ -9,7 +9,7 @@ export const projectSchema = z
       .max(100, "Nome deve ter no máximo 100 caracteres"),
     description: z.string().optional(),
     status: z
-      .enum(["open", "close"], {
+      .enum(["open", "close", "pending"], {
         message: "Status inválido",
       })
       .optional(),

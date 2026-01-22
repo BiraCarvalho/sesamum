@@ -179,7 +179,7 @@ export const InviteDetailsModal: React.FC<InviteDetailsModalProps> = ({
           <div className="flex justify-end">
             <button
               onClick={handleCopyInviteUrl}
-              className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+              className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 hover:cursor-pointer transition-colors whitespace-nowrap"
             >
               {copied ? (
                 <>
@@ -275,14 +275,14 @@ export const InviteDetailsModal: React.FC<InviteDetailsModalProps> = ({
                 <button
                   onClick={handleCancelDelete}
                   disabled={deleting}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={deleting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {deleting ? "Excluindo..." : "Confirmar Exclusão"}
                 </button>
@@ -294,7 +294,7 @@ export const InviteDetailsModal: React.FC<InviteDetailsModalProps> = ({
               <button
                 onClick={handleDeleteClick}
                 disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Excluir Convite
               </button>
